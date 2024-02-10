@@ -46,7 +46,7 @@ const getIconColor = (tab: ProjectTab) => {
   <v-slide-group
     :model-value="tabs.currentTab"
     show-arrows
-    @update:model-value="tabs.selectTab($event)"
+    @update:model-value="$event && tabs.selectTab($event)"
   >
     <v-slide-group-item
       v-for="(tab, index) in tabs.projectTabs"
@@ -84,7 +84,7 @@ const getIconColor = (tab: ProjectTab) => {
 
   &:not(.text-primary):deep(.v-chip__close) {
     opacity: 0;
-    transition: opacity 0.2s ease-in-out;
+    transition: opacity 0.1s ease-in-out;
   }
   &:hover:deep(.v-chip__close) {
     opacity: 1;

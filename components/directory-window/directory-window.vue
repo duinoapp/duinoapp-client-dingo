@@ -1,9 +1,14 @@
 <script setup lang="ts">
+import { useTheme } from 'vuetify';
 import type { PathMap } from '@duinoapp/files-multitool';
 import type { FileItem } from './directory-window';
+import { getContentTypeFromFileName, getIconFromContentType, getIconColorFromContentType } from '../code/code-utils.ts';
 
 const projects = useProjects();
+const theme = useTheme();
 const tabs = useTabs();
+
+const darkMode = computed(() => theme.global.current.value.dark);
 
 const pathMap = ref<PathMap | null>(null);
 const selectedPath = ref<string | null>(null);
@@ -15,10 +20,15 @@ const fileItems = computed(() => {
     const parts = path.split('/');
     const name = parts.pop()!;
     const dir = parts.join('/');
+    const contentType = getContentTypeFromFileName(name);
+    const icon = getIconFromContentType(contentType);
+    const iconColor = getIconColorFromContentType(contentType, darkMode.value);
     const item: FileItem = {
       name,
       path,
       stat,
+      icon,
+      iconColor,
       children: [],
     };
     const fis = itemsByDir.get(dir) || [];
@@ -86,7 +96,17 @@ const handleSelect = (path: string) => {
       :key="child.path"
       :item="child"
       :selected-path="selectedPath"
+      :depth="1"
       @update:selected-path="handleSelect"
     />
   </div>
 </template>
+
+<style scoped>
+
+.dir-window {
+  padding: 8px 0px;
+  overflow-y: auto;
+  height: 100%;
+}
+</style>

@@ -1,0 +1,10 @@
+{
+  "settingsVersion": "1.0.0",
+  "name": "Blink",
+  "description": "Blink the LED on and off",
+  "editor": "text",
+  "version": "1.0.0",
+  "author": "",
+  "libraries": [],
+  "board": "arduino:avr:uno"
+}

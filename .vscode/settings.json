@@ -1,0 +1,15 @@
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.probe": ["javascript", "javascriptreact", "html", "vue"],
+  "editor.formatOnSave": false,
+  "eslint.workingDirectories": [
+    "./apps",
+    "./packages"
+  ],
+  "vetur.validation.template": false,
+  "vetur.validation.script": false,
+  "editor.tabSize": 2,
+  "typescript.tsdk": "node_modules/typescript/lib"
+}

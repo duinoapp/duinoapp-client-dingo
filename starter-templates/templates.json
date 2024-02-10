@@ -1,0 +1,10 @@
+{
+  "templates": {
+    "blink": {
+      "id": "blink",
+      "name": "Blink",
+      "description": "Blink the LED on and off",
+      "src": "/starter-templates/blink.zip"
+    }
+  }
+}

@@ -10,7 +10,8 @@ const writeTimeout = ref<NodeJS.Timeout | null>(null);
 const loading = ref(false);
 
 const currentTabId = computed(() => tabs.currentTab?.id);
-const pathContent = computed(() => pathContentCache.value.get(tabs.currentTab?.path || '') || '');
+const currentTabPath = computed(() => tabs.currentTab?.path);
+const pathContent = computed(() => pathContentCache.value.get(currentTabPath.value || '') || '');
 const language = computed(() => getLanguageFromContentType(getContentTypeFromFileName(tabs.currentTab?.path || '')));
 // const editorRef = computed(() => `${tabs.currentTab?.projectId}/${tabs.currentTab?.path}`);
 
@@ -39,9 +40,14 @@ const savePath = (path: string, content: string) => {
 };
 
 watch(currentTabId, async () => {
-  if (tabs.currentTab?.type !== 'file') return;
-  await loadFileContent(tabs.currentTab.path!);
+  if (tabs.currentTab?.type !== 'file' || !currentTabPath.value) return;
+  await loadFileContent(currentTabPath.value);
 }, { immediate: true });
+
+watch(currentTabPath, async () => {
+  if (!currentTabPath.value) return;
+  await loadFileContent(currentTabPath.value);
+});
 
 </script>
 

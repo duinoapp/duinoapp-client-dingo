@@ -1,7 +1,7 @@
 <template>
   <main-grid>
     <template #left>
-      <directory-window />
+      <left-window />
     </template>
     <template #top>
       <main-window />
@@ -10,4 +10,5 @@
       <action-window />
     </template>
   </main-grid>
+  <project-init-dialog />
 </template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { FileItem } from './directory-window';
+import type { FileItem } from './directory-area.d';
 
 const props = defineProps<{
   item: FileItem,
@@ -77,6 +77,9 @@ const handleSelect = () => {
 .dir-list-item-name {
   border: 1px solid transparent;
   transition: background-color 0.1s ease-in-out;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 .dir-list-item-name:hover {
   background-color: rgba(255,255, 255, 0.1);

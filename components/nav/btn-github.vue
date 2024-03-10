@@ -5,7 +5,7 @@
     target="_blank"
   >
     <img
-      src="https://cdn.simpleicons.org/github/fff/fff.svg"
+      src="https://cdn.simpleicons.org/github/fff/fff"
       style="height: 1.5em; width: 1.5em;"
     >
   </v-btn>

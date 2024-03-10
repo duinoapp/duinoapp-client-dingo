@@ -63,6 +63,14 @@ const isFileEditorVisible = computed(() => tabs.currentTab?.type === 'file');
       v-if="tabs.currentTab?.type === 'welcome'"
       class="main-window-area"
     />
+    <start-project-area
+      v-if="tabs.currentTab?.type === 'start-project'"
+      class="main-window-area"
+    />
+    <invaders-area
+      v-if="tabs.currentTab?.type === 'invaders'"
+      class="main-window-area"
+    />
   </div>
 </template>
 
@@ -70,10 +78,13 @@ const isFileEditorVisible = computed(() => tabs.currentTab?.type === 'file');
 .main-window {
   display: flex;
   flex-direction: column;
+  position: relative;
   height: 100%;
 }
 
 .main-window-area {
   flex-grow: 1;
+  position: relative;
+  height: calc(100% - 32px);
 }
 </style>

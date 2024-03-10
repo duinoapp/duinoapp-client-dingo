@@ -20,6 +20,8 @@ const darkMode = computed(() => theme.global.current.value.dark);
 
 // defineEmits(['update:modelValue', 'removeFile']);
 
+const notClosable = (tab: ProjectTab) => ['welcome', 'start-project'].includes(tab.type);
+
 const getIcon = (tab: ProjectTab) => {
   switch (tab.type) {
     case 'file':
@@ -28,6 +30,14 @@ const getIcon = (tab: ProjectTab) => {
       return 'mdi-cog';
     case 'welcome':
       return 'mdi-hand-wave';
+    case 'start-project':
+      return 'mdi-shimmer';
+    case 'invaders':
+      return 'mdi-space-invaders';
+    case 'boards':
+      return 'mdi-memory';
+    case 'libraries':
+      return 'mdi-book-open-variant';
     default:
       return 'mdi-file-question';
   }
@@ -45,12 +55,13 @@ const getIconColor = (tab: ProjectTab) => {
 <template>
   <v-slide-group
     :model-value="tabs.currentTab"
+    class="file-tabs"
     show-arrows
     @update:model-value="$event && tabs.selectTab($event)"
   >
     <v-slide-group-item
-      v-for="(tab, index) in tabs.projectTabs"
-      :key="index"
+      v-for="tab in tabs.projectTabs"
+      :key="tab.id"
       v-slot="{ isSelected, toggle }"
       :value="tab"
     >
@@ -59,7 +70,7 @@ const getIconColor = (tab: ProjectTab) => {
         class="file-tab px-4"
         close-icon="mdi-close"
         label
-        closable
+        :closable="!notClosable(tab)"
         @click="toggle"
         @click:close="tabs.closeTab(tab)"
       >
@@ -89,6 +100,10 @@ const getIconColor = (tab: ProjectTab) => {
   &:hover:deep(.v-chip__close) {
     opacity: 1;
   }
+}
+
+.file-tabs {
+  height: 32px;
 }
 
 </style>

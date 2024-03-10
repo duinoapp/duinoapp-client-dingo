@@ -1,26 +1,30 @@
 <script setup lang="ts">
 import { Panel, PanelGroup, PanelResizeHandle } from 'vue-resizable-panels';
 
-const isLeftPanelCollapsed = ref(false);
-const isBottomPanelCollapsed = ref(false);
+
+const { panelState, onVLayoutChange, onHLayoutChange } = usePanels();
 
 </script>
 
 <template>
-  <PanelGroup class="main-grid-hgroup" direction="horizontal">
+  <PanelGroup
+    class="main-grid-hgroup"
+    direction="horizontal"
+  >
     <Panel
       class="main-grid-left"
       :default-size="15"
       :min-size="10"
       collapsible
-      @collapse="isLeftPanelCollapsed = $event"
+      @resize="onHLayoutChange()"
+      @collapse="panelState.isLeftPanelCollapsed = $event"
     >
       <slot name="left">
         <div>left</div>
       </slot>
     </Panel>
     <PanelResizeHandle
-      :class="{ 'main-grid-left-handle': true, collapsed: isLeftPanelCollapsed }"
+      :class="{ 'main-grid-left-handle': true, collapsed: panelState.isLeftPanelCollapsed }"
     >
       <div class="handle-v-accent" />
     </PanelResizeHandle>
@@ -28,14 +32,17 @@ const isBottomPanelCollapsed = ref(false);
       :min-size="30"
       class="main-grid-right"
     >
-      <PanelGroup class="main-grid-vgroup" direction="vertical">
+      <PanelGroup
+        class="main-grid-vgroup"
+        direction="vertical"
+      >
         <Panel :min-size="10" class="main-grid-top">
           <slot name="top">
             <div>top</div>
           </slot>
         </Panel>
         <PanelResizeHandle
-          :class="{ 'main-grid-bottom-handle': true, collapsed: isBottomPanelCollapsed }"
+          :class="{ 'main-grid-bottom-handle': true, collapsed: panelState.isBottomPanelCollapsed }"
         >
           <div class="handle-h-accent" />
         </PanelResizeHandle>
@@ -44,7 +51,8 @@ const isBottomPanelCollapsed = ref(false);
           :min-size="5"
           class="main-grid-bottom"
           collapsible
-          @collapse="isBottomPanelCollapsed = $event"
+          @collapse="panelState.isBottomPanelCollapsed = $event"
+          @resize="onVLayoutChange()"
         >
           <slot name="bottom">
             <div>bottom</div>

@@ -1,61 +1,79 @@
 <script lang="ts" setup>
 import TerminalArea from './terminal-area.vue';
 
+const panels = usePanels();
+const compiler = useCompiler();
+
 const tab = ref('program');
+const heightType = ref('height');
 const programTerm = ref(null as typeof TerminalArea | null);
 const monitorTerm = ref(null as typeof TerminalArea | null);
 
-onMounted(() => {
+const reFit = () => {
+  heightType.value = 'height';
   setTimeout(() => {
-    if (!programTerm.value || !monitorTerm.value) return;
-    programTerm.value.write('Hello Programmer');
-    monitorTerm.value.write('Hello Monitor');
-  }, 100);
+    if (tab.value === 'program') {
+      programTerm.value?.fit();
+      programTerm.value?.focus();
+    } else if (tab.value === 'monitor') {
+      monitorTerm.value?.fit();
+      monitorTerm.value?.focus();
+    }
+    heightType.value = 'max-height';
+  }, 50);
+};
+
+watch(tab, () => reFit(), { immediate: true });
+watch(panels.layoutState, () => reFit(), { immediate: true });
+watch(computed(() => compiler.compiling), (value) => {
+  if (value) {
+    tab.value = 'program';
+  }
 });
 
 </script>
 
 <template>
-  <div class="d-flex align-center">
-    <v-tabs
-      v-model="tab"
-      density="compact"
-    >
-      <v-tab value="program">
-        <v-icon start>
-          mdi-upload-network-outline
-        </v-icon>
-        Program
-      </v-tab>
-      <v-tab value="monitor">
-        <v-icon start>
-          mdi-console
-        </v-icon>
-        Monitor
-      </v-tab>
-      <v-tab value="plot">
-        <v-icon start>
-          mdi-chart-bell-curve
-        </v-icon>
-        Plot
-      </v-tab>
-    </v-tabs>
-    <v-spacer />
-    <div class="flex-grow-0 px-3">
-      <program-actions />
+  <div style="height: 100%; position: relative;" class="d-flex flex-column">
+    <div class="d-flex align-center">
+      <v-tabs
+        v-model="tab"
+        density="compact"
+      >
+        <v-tab value="program">
+          <v-icon start>
+            mdi-upload-network-outline
+          </v-icon>
+          Program
+        </v-tab>
+        <v-tab value="monitor">
+          <pulsing-icon start>
+            mdi-console
+          </pulsing-icon>
+          Monitor
+        </v-tab>
+        <v-tab value="plot">
+          <v-icon start>
+            mdi-chart-bell-curve
+          </v-icon>
+          Plot
+        </v-tab>
+      </v-tabs>
+      <v-spacer />
+      <div class="flex-grow-0 px-3">
+        <program-actions />
+      </div>
     </div>
-  </div>
-  <v-window v-model="tab">
-    <v-window-item value="program" eager>
-      <terminal-area ref="programTerm" />
-    </v-window-item>
-    <v-window-item value="monitor" eager>
-      <terminal-area ref="monitorTerm" />
-    </v-window-item>
-    <v-window-item value="plot" eager>
-      <div style="height: -webkit-fill-available">
+    <connect-overlay v-show="tab !== 'program'" />
+    <div :style="`${heightType}: calc(100% - ${tab === 'program' ? 36 : 76}px);`">
+      <terminal-area v-show="tab === 'program'" ref="programTerm" type="program" />
+      <terminal-area v-show="tab === 'monitor'" ref="monitorTerm" type="serial" />
+      <div v-show="tab === 'plot'" style="height: calc(100% - 76px)">
         put graph here
       </div>
-    </v-window-item>
-  </v-window>
+    </div>
+    <div v-show="tab !== 'program'" class="flex-grow-1">
+      <monitor-tools />
+    </div>
+  </div>
 </template>

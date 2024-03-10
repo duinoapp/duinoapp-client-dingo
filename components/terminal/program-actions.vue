@@ -1,3 +1,18 @@
+<script setup lang="ts">
+
+const compiler = useCompiler();
+const uploader = useUploader();
+
+const check = async () => {
+  await compiler.compile();
+};
+
+const upload = async () => {
+  await uploader.upload();
+};
+
+</script>
+
 <template>
   <v-btn density="compact" class="mr-2" icon>
     <v-icon>
@@ -10,7 +25,14 @@
       Select Board
     </v-tooltip>
   </v-btn>
-  <v-btn density="compact" class="mr-2" icon>
+  <v-btn
+    :loading="compiler.compiling"
+    :disabled="uploader.uploading"
+    density="compact"
+    class="mr-2"
+    icon
+    @click="check"
+  >
     <v-icon>
       mdi-check
     </v-icon>
@@ -21,7 +43,13 @@
       Verify & Compile
     </v-tooltip>
   </v-btn>
-  <v-btn density="compact" icon>
+  <v-btn
+    :loading="uploader.uploading"
+    :disabled="compiler.compiling"
+    density="compact"
+    icon
+    @click="upload"
+  >
     <v-icon>
       mdi-arrow-right
     </v-icon>

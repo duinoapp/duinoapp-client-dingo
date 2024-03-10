@@ -1,6 +1,6 @@
 import { useLocalStorage } from '@vueuse/core';
 import FilesMultitool from '@duinoapp/files-multitool';
-import type { FilesMultitoolType, FilesMultitoolOptions } from '@duinoapp/files-multitool';
+import type { FilesMultitoolType, FilesMultitoolOptions, FileStat } from '@duinoapp/files-multitool';
 import { defineStore } from 'pinia';
 import {
   settingsPath,
@@ -25,24 +25,49 @@ interface BasicProjectRef {
   id: string
   name: string
   type: FilesMultitoolType
+  lastOpened?: number
 };
   
 interface Project extends BasicProjectRef {
   storage: FilesMultitool
   settings: ProjectSettings
+  lastOpened: number
 };
+
+type InitDialogType = 'import' | 'create' | 'open' | 'example';
 
 const adaptorOptionsMap = {
   'fsa-api': { db: 'duinoapp', startIn: 'documents' },
-  'indexeddb': { db: 'duinoapp' },
+  'indexed-db': { db: 'duinoapp' },
   'memory': { db: 'duinoapp' },
 } as { [key: string]: FilesMultitoolOptions };
 
-const validateProjectDirectory = async (storage: FilesMultitool, isExisting?: boolean): Promise<void> => {
-  const hasSettings = await storage.exists(settingsPath);
-  if (!hasSettings) {
+const blankIno = `
+void setup() {
+  // put your setup code here, to run once:
+
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+}
+`;
+
+const validateProjectDirectory = async (storage: FilesMultitool, isExisting?: boolean): Promise<string> => {
+  // const hasSettings = await storage.exists(settingsPath);
+  // const hasIno = await storage.exists(getInoFileName(projectName));
+  const rootFiles = await storage.list('/', false);
+  const inoFiles = Object.entries(rootFiles).filter(([f, stat]: [string, FileStat]) => f.endsWith('.ino') && stat.isFile);
+  if (inoFiles.length > 1) {
+    await storage.destroy();
+    throw new Error('Project directory contains multiple .ino files.');
+  }
+  const hasIno = inoFiles.length > 0;
+  if (!hasIno) {
     if (isExisting) {
-      throw new Error('Directory specified does not contain a settings file.');
+      await storage.destroy();
+      throw new Error('Directory specified does not contain a ino file.');
     }
     const rootFiles = await storage.list('/');
     if (Object.keys(rootFiles).length > 0) {
@@ -50,22 +75,30 @@ const validateProjectDirectory = async (storage: FilesMultitool, isExisting?: bo
       throw new Error('Project directory is not empty and does not contain a valid project.');
     }
   }
+  return inoFiles[0]?.[0] ?? '';
 };
 
 const initialiseProject = async (project: BasicProjectRef, isExisting?: boolean): Promise<Project> => {
   const adaptorOpts = { ...adaptorOptionsMap[project.type] };
-  if (project.type === 'indexeddb' as FilesMultitoolType) {
+  if (project.type === 'indexed-db') {
     adaptorOpts.db = `${adaptorOpts.db}-${camelCase(project.id)}`
   }
   const storage = new FilesMultitool(project.type, project.id, adaptorOpts);
   await storage.init();
-  await validateProjectDirectory(storage, isExisting);
-  const settings = await parseProjectSettings(storage, project.name);
+  const inoFileName = await validateProjectDirectory(storage, isExisting);
+  const settings = await parseProjectSettings(storage, getProjectNameFromIno(inoFileName));
+  project.name = settings.name;
+  if (!inoFileName) {
+    await storage.writeFile(getInoFileName(project.name), blankIno);
+  } else if (inoFileName !== getInoFileName(project.name)) {
+    await storage.rename(inoFileName, getInoFileName(project.name));
+  }
   return {
     ...project,
     name: settings.name,
     storage,
     settings,
+    lastOpened: Date.now(),
   } as Project;
 };
 
@@ -84,6 +117,11 @@ export const useProjects = defineStore('projects', {
     } as ProjectsLocalStore, { mergeDefaults: true }),
     _currentProject: null as Project | null,
     volatileActions: new Set<string>(),
+    dialog: {
+      open: false,
+      type: '' as InitDialogType,
+      ref: '',
+    },
   }),
   getters: {
     currentProject(): Project | null {
@@ -98,18 +136,27 @@ export const useProjects = defineStore('projects', {
     storage(): FilesMultitool | null {
       return this.currentProject?.storage ?? null;
     },
-    projectItems(): { text: string, value: string, disabled: boolean }[] {
-      return this.local.projectRefs.map((p) => ({
-        text: p.name,
-        value: p.id,
-        disabled: p.id === this.currentProjectId,
-      }));
+    inoFileName(): string | null {
+      return getInoFileName(this.currentProject?.name ?? '');
+    },
+    projectItems(): { text: string, value: string, disabled: boolean, type: FilesMultitoolType }[] {
+      return this.local.projectRefs
+        .toSorted((a, b) => b.lastOpened! - a.lastOpened!)
+        .map((p) => ({
+          text: p.name,
+          value: p.id,
+          type: p.type,
+          disabled: p.id === this.currentProjectId,
+        }));
     },
     isVolatile(): boolean {
       return this.volatileActions.size > 0;
     },
     starterTemplates() {
       return starterTemplates;
+    },
+    storageItems() {
+      return FilesMultitool.getTypes();
     },
   },
   actions: {
@@ -146,6 +193,7 @@ export const useProjects = defineStore('projects', {
       }
       const oldCurrentProject = this._currentProject;
       const project = await initialiseProject(projectRef);
+      projectRef.lastOpened = project.lastOpened;
       this.local.currentProjectId = projectId;
       this._currentProject = project;
       if (oldCurrentProject) {
@@ -161,9 +209,10 @@ export const useProjects = defineStore('projects', {
     async createProject(type: FilesMultitoolType, name: string): Promise<Project> {
       await this.waitForVolatileActions();
       const id = genId();
-      const projectRef = { id, name, type };
+      const projectRef = { id, name, type } as BasicProjectRef;
       const oldCurrentProject = this._currentProject;
       const project = await initialiseProject(projectRef);
+      projectRef.lastOpened = project.lastOpened;
       this.local.projectRefs.push(projectRef);
       this.local.currentProjectId = id;
       this._currentProject = project;
@@ -174,8 +223,9 @@ export const useProjects = defineStore('projects', {
     },
     async openProject(type: FilesMultitoolType): Promise<Project> {
       const id = genId();
-      const projectRef = { id, name: '', type };
+      const projectRef = { id, name: '', type } as BasicProjectRef;
       const project = await initialiseProject(projectRef, true);
+      projectRef.lastOpened = project.lastOpened;
       const oldCurrentProject = this._currentProject;
       this.local.projectRefs.push(projectRef);
       this.local.currentProjectId = id;
@@ -193,6 +243,7 @@ export const useProjects = defineStore('projects', {
         return;
       }
       const project = await initialiseProject(projectRef, true);
+      projectRef.lastOpened = project.lastOpened;
       this._currentProject = project;
     },
     async updateSettings(settings: Partial<ProjectSettings>): Promise<void> {
@@ -223,8 +274,9 @@ export const useProjects = defineStore('projects', {
     },
     async openExtractedProject(type: FilesMultitoolType, extracted: ExtractedProject, name?: string): Promise<Project> {
       const id = genId();
-      const projectRef = { id, name: extracted.settings.name, type };
+      const projectRef = { id, name: extracted.settings.name, type } as BasicProjectRef;
       const project = await initialiseProject(projectRef, false);
+      projectRef.lastOpened = project.lastOpened;
       const oldCurrentProject = this._currentProject;
       this.local.projectRefs.push(projectRef);
       this.local.currentProjectId = id;
@@ -234,7 +286,8 @@ export const useProjects = defineStore('projects', {
       }
       await Promise.all(extracted.files.map(async (f): Promise<void> => {
         if (f.path === settingsPath) return;
-        await project.storage.writeFile(f.path, await f.file.arrayBuffer());
+        const path = f.path.endsWith('.ino') ? getInoFileName(projectRef.name) : f.path;
+        await project.storage.writeFile(path, await f.file.arrayBuffer());
       }));
       if (name && name !== extracted.settings.name) {
         extracted.settings.name = name;
@@ -254,5 +307,14 @@ export const useProjects = defineStore('projects', {
       const extracted = await importProject(file);
       return this.openExtractedProject(type, extracted, name);
     },
+    initDialog(type: InitDialogType, ref?: string): void {
+      this.dialog.open = true;
+      this.dialog.type = type;
+      this.dialog.ref = ref ?? '';
+    }
   },
 });
+
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useProjects, import.meta.hot))
+}

@@ -27,11 +27,7 @@ const { public: { version } } = useRuntimeConfig();
           />
         </nuxtLink>
       </div>
-      <!-- <v-list>
-        <v-list-item>
-          <v-list-item-icon />
-        </v-list-item>
-      </v-list> -->
+      <left-menu />
     </v-navigation-drawer>
     <v-main>
       <slot />

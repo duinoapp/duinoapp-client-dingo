@@ -5,7 +5,7 @@ const projects = useProjects();
 
 const testProject = () => {
   console.log('test project');
-  projects.projectFromTemplate('indexdb' as FilesMultitoolType, 'blink', 'test-project').catch(console.error);
+  projects.projectFromTemplate('indexed-db' as FilesMultitoolType, 'blink', 'test-project').catch(console.error);
 };
 
 </script>
@@ -13,8 +13,8 @@ const testProject = () => {
 <template>
   <p>
     welcome
+    <btn-primary @click="testProject">
+      Test Project
+    </btn-primary>
   </p>
-  <btn-primary @click="testProject">
-    Test Project
-  </btn-primary>
 </template>

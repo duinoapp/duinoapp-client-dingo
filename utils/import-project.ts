@@ -1,6 +1,10 @@
 import { Archive } from 'libarchive.js';
 import type { ProjectSettings } from './project-settings';
-import { validateSettings } from './project-settings';
+import {
+  validateSettings,
+  getDefaultProjectSettings,
+  getProjectNameFromIno,
+} from './project-settings';
 import { templates } from '@/starter-templates/templates.json';
 
 
@@ -45,22 +49,34 @@ export const importProject = async (file: File): Promise<ExtractedProject> => {
   const archive = await Archive.open(file);
   const filesArray = await archive.getFilesArray();
   const settingsFile = filesArray.find((f) => /(^|\/)\.duinoapp\/settings\.json$/.test(`${f.path}${f.file.name}`));
-  if (!settingsFile) throw new Error('Archive does not contain a valid project.');
+  const inoFile = filesArray.find((f) => /\w+\.ino$/.test(f.file.name));
+  if (!settingsFile && !inoFile) throw new Error('Archive does not contain a valid project.');
+  if (!inoFile) throw new Error('Archive does not contain a valid project root file.');
   let extractedFiles = await archive.extractFiles();
-  const projectPath = settingsFile.path.replace(/\/?\.duinoapp\/$/, '');
+  let projectPath;
+  if (settingsFile) {
+    projectPath = settingsFile.path.replace(/\/?\.duinoapp\/$/, '');
+  } else {
+    projectPath = inoFile.path;
+  }
   if (projectPath) {
     projectPath.split('/').forEach((dir: string) => {
       extractedFiles = extractedFiles[dir];
     });
   }
   let settings = null;
-  try {
-    settings = JSON.parse(await extractedFiles['.duinoapp']['settings.json'].text());
-  } catch (e) {
-    console.error(e);
-    throw new Error('Failed to parse settings file.');
+  if (settingsFile) {
+    try {
+      settings = JSON.parse(await extractedFiles['.duinoapp']['settings.json'].text());
+    } catch (e) {
+      console.error(e);
+      throw new Error('Failed to parse settings file.');
+    }
+    // settings.name = getProjectNameFromIno(inoFile.file.name);
+    validateSettings(settings);
+  } else {
+    settings = getDefaultProjectSettings(getProjectNameFromIno(inoFile.file.name));
   }
-  validateSettings(settings);
   return {
     settings,
     files: filesObjectToArray(extractedFiles),

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useTheme } from 'vuetify';
 import type { PathMap } from '@duinoapp/files-multitool';
-import type { FileItem } from './directory-window';
+import type { FileItem } from './directory-area';
 import { getContentTypeFromFileName, getIconFromContentType, getIconColorFromContentType } from '../code/code-utils.ts';
 
 const projects = useProjects();
@@ -60,9 +60,14 @@ const handlePathChange = () => {
 };
 
 const currentProjectId = computed(() => projects.currentProjectId);
+const currentStorage = ref(projects.storage);
 watch(currentProjectId, () => {
   loadPathMap();
+  if (currentStorage.value) {
+    currentStorage.value.off?.('paths-changed', handlePathChange);
+  }
   projects.storage?.on('paths-changed', handlePathChange);
+  currentStorage.value = projects.storage;
 }, { immediate: true });
 
 onBeforeUnmount(() => {
@@ -88,9 +93,9 @@ const handleSelect = (path: string) => {
 </script>
 
 <template>
-  {{ projects.currentProject?.id }}<br>
-  {{ tabs.currentTab?.path }}
-  <div class="dir-window">
+  <div class="dir-area">
+    {{ projects.currentProject?.id }}<br>
+    {{ tabs.currentTab?.path }}
     <directory-list-item
       v-for="child in fileItems"
       :key="child.path"
@@ -104,7 +109,7 @@ const handleSelect = (path: string) => {
 
 <style scoped>
 
-.dir-window {
+.dir-area {
   padding: 8px 0px;
   overflow-y: auto;
   height: 100%;

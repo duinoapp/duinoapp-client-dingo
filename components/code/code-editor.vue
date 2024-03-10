@@ -6,7 +6,7 @@ withDefaults(defineProps<{
   modelValue: string,
   theme?: string,
   language: string,
-  path: string,
+  path?: string,
   options?: EditorOptions,
 }>(), {
   modelValue: '',

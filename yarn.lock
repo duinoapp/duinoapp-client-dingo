@@ -3067,6 +3067,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/adm-zip@npm:^0":
+  version: 0.5.5
+  resolution: "@types/adm-zip@npm:0.5.5"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10c0/4976dc61e33534ecfb7eee87e8a587db06420a4eb9f34eee9425aece82e9fdd01ddd22677ff6430c582f4d9735c7d714c71adb8f149e3511bc189501b4113631
+  languageName: node
+  linkType: hard
+
 "@types/estree@npm:*, @types/estree@npm:1.0.5, @types/estree@npm:^1.0.0":
   version: 1.0.5
   resolution: "@types/estree@npm:1.0.5"
@@ -3682,6 +3691,13 @@ __metadata:
   bin:
     acorn: bin/acorn
   checksum: 10c0/3ff155f8812e4a746fee8ecff1f227d527c4c45655bb1fad6347c3cb58e46190598217551b1500f18542d2bbe5c87120cb6927f5a074a59166fbdd9468f0a299
+  languageName: node
+  linkType: hard
+
+"adm-zip@npm:^0.5.12":
+  version: 0.5.12
+  resolution: "adm-zip@npm:0.5.12"
+  checksum: 10c0/fca2893b416bfcbee8b371a403f4d2e980a3c1055ce7b9b0b2ac8540c8efe6bbb27cc63ddf64ff6e6ed40c84fcb1ede7e95d230e7a567025e03f1044efbf6be0
   languageName: node
   linkType: hard
 
@@ -4684,13 +4700,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cross-zip@npm:^4.0.1":
-  version: 4.0.1
-  resolution: "cross-zip@npm:4.0.1"
-  checksum: 10c0/06d737481854ee61376f2d6f80ce758cf543ef6a753300e45141f3d424e6790c2db19ccc86d07e10416bfdf3e1b30e5b3b8084619204b9931c7a0e694f54436c
-  languageName: node
-  linkType: hard
-
 "crossws@npm:^0.2.0, crossws@npm:^0.2.2, crossws@npm:^0.2.4":
   version: 0.2.4
   resolution: "crossws@npm:0.2.4"
@@ -5180,14 +5189,15 @@ __metadata:
     "@nuxt/kit": "npm:^3.10.3"
     "@nuxtjs/eslint-config-typescript": "npm:^12.0.0"
     "@pinia/nuxt": "npm:^0.5.1"
+    "@types/adm-zip": "npm:^0"
     "@typescript-eslint/eslint-plugin": "npm:^6.7.2"
     "@typescript-eslint/parser": "npm:^6.7.2"
     "@vite-pwa/nuxt": "npm:^0.6.0"
     "@vue/eslint-config-typescript": "npm:^12.0.0"
     "@vueuse/core": "npm:^10.4.1"
     "@vueuse/nuxt": "npm:^10.4.1"
+    adm-zip: "npm:^0.5.12"
     change-case: "npm:^5.4.2"
-    cross-zip: "npm:^4.0.1"
     eslint: "npm:^8.48.0"
     eslint-config-airbnb-base: "npm:^15.0.0"
     eslint-import-resolver-typescript: "npm:^3.6.1"

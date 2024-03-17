@@ -40,8 +40,8 @@
     "xterm-addon-fit": "^0.8.0"
   },
   "dependencies": {
-    "@duinoapp/files-multitool": "^0.0.1",
-    "@duinoapp/upload-multitool": "^0.0.1",
+    "@duinoapp/files-multitool": "^0.0.2",
+    "@duinoapp/upload-multitool": "^0.0.2",
     "@pinia/nuxt": "^0.5.1",
     "change-case": "^5.4.2",
     "fast-deep-equal": "^3.1.3",

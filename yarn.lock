@@ -1437,24 +1437,26 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@duinoapp/files-multitool@npm:^0.0.1":
-  version: 0.0.1
-  resolution: "@duinoapp/files-multitool@npm:0.0.1"
+"@duinoapp/files-multitool@npm:^0.0.2":
+  version: 0.0.2
+  resolution: "@duinoapp/files-multitool@npm:0.0.2"
   dependencies:
     node-fetch: "npm:^3.3.1"
-  checksum: 10c0/08c8dc3fe4ef3bbf01f9b53d60e69e821a575dd5a555d786d870c643c06f52059edf8932f9667b1fd8f04f5fc78f12c61006d4344f4848190e9dc144190adca7
+    tiny-typed-emitter: "npm:^2.1.0"
+  checksum: 10c0/818ff901095b6433ae2edbd19dc08421a84e10538b7bf205cb57421465ef6f8078040b435f0ff364f2ff02a9e3d86593ab7951dea73f2bee320f2bbc87240311
   languageName: node
   linkType: hard
 
-"@duinoapp/upload-multitool@npm:^0.0.1":
-  version: 0.0.1
-  resolution: "@duinoapp/upload-multitool@npm:0.0.1"
+"@duinoapp/upload-multitool@npm:^0.0.2":
+  version: 0.0.2
+  resolution: "@duinoapp/upload-multitool@npm:0.0.2"
   dependencies:
     axios: "npm:^0.27.2"
     crypto-js: "npm:^4.1.1"
     intel-hex: "npm:^0.1.2"
     pako: "npm:^2.0.4"
-  checksum: 10c0/4d58b0d51f38e30a8ae723394c508d2fa8cb30106c1b5dd8baeaa4fa089793d39b6a0bd42b0688ba3b8d01f842688973fe5ef60380126ba7850e99e37e02628e
+    serialport: "npm:^10.4.0"
+  checksum: 10c0/dbb2577d6a54641cfb2045709d49a1b23a657936cde8890dc3b00d57a1bd8b09dfd7a6a5f1a156fde27e388de77b67434d8ab0c2cb165a98c347b027de087f39
   languageName: node
   linkType: hard
 
@@ -2850,6 +2852,119 @@ __metadata:
   version: 4.13.0
   resolution: "@rollup/rollup-win32-x64-msvc@npm:4.13.0"
   conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@serialport/binding-mock@npm:10.2.2":
+  version: 10.2.2
+  resolution: "@serialport/binding-mock@npm:10.2.2"
+  dependencies:
+    "@serialport/bindings-interface": "npm:^1.2.1"
+    debug: "npm:^4.3.3"
+  checksum: 10c0/ba0b26f0e449b32b77315cf57d377318d4ffdaa84d6aaa1efdc48f35b99ade513d2a37f672443163446f1feeb664d5d518f05ea5c5c90d935b87a92fee36b2ba
+  languageName: node
+  linkType: hard
+
+"@serialport/bindings-cpp@npm:10.8.0":
+  version: 10.8.0
+  resolution: "@serialport/bindings-cpp@npm:10.8.0"
+  dependencies:
+    "@serialport/bindings-interface": "npm:1.2.2"
+    "@serialport/parser-readline": "npm:^10.2.1"
+    debug: "npm:^4.3.2"
+    node-addon-api: "npm:^5.0.0"
+    node-gyp: "npm:latest"
+    node-gyp-build: "npm:^4.3.0"
+  checksum: 10c0/e6ee85391a2ca05f2b7aca7ff9037dc08a97faa1c793ebce620245dc645994371df3c56b00accff74b96641761ca37422da95690a09bf89f306bfab87a6360bd
+  languageName: node
+  linkType: hard
+
+"@serialport/bindings-interface@npm:1.2.2, @serialport/bindings-interface@npm:^1.2.1":
+  version: 1.2.2
+  resolution: "@serialport/bindings-interface@npm:1.2.2"
+  checksum: 10c0/e0fb8deaee585573c4151dcb13cc2dc471fc9906a16d8b595fd9aed27e263b8b2e1ba94b0eda814f2ddab7d4143ad7d504b5d2034e5607d8c1d77b4b3dcfc369
+  languageName: node
+  linkType: hard
+
+"@serialport/parser-byte-length@npm:10.5.0":
+  version: 10.5.0
+  resolution: "@serialport/parser-byte-length@npm:10.5.0"
+  checksum: 10c0/adeb871734e410f53f9b1ce8798e749a3ea65a586f987befc8c5a0be541d34f7517c561d88608d4c1096f6e380e7c5c7f7919dd47012cf7839f6fb7364d0e4df
+  languageName: node
+  linkType: hard
+
+"@serialport/parser-cctalk@npm:10.5.0":
+  version: 10.5.0
+  resolution: "@serialport/parser-cctalk@npm:10.5.0"
+  checksum: 10c0/f6277a77a48c1402f2c290818e685a4fccd7312d3a1bb20c0d98b2bfe3d832633c0769a5088c6ae9bdd6b7c256e6ffa61f9f2cab7d52a69c3b90dd86993f3c58
+  languageName: node
+  linkType: hard
+
+"@serialport/parser-delimiter@npm:10.5.0":
+  version: 10.5.0
+  resolution: "@serialport/parser-delimiter@npm:10.5.0"
+  checksum: 10c0/290f6bb2007d812bdb6581fe21091d0de7d3e51699d0780884ffe067a663da3cf7284382402e77afa7c04cad1d6b69ec3fe1a701fc5956f972cf31396d9e2ecd
+  languageName: node
+  linkType: hard
+
+"@serialport/parser-inter-byte-timeout@npm:10.5.0":
+  version: 10.5.0
+  resolution: "@serialport/parser-inter-byte-timeout@npm:10.5.0"
+  checksum: 10c0/35a8c9d2efc225cd2e7158ab0b8290d441207ea5cbb9d8d9ca0a55736282732a329ac8baf8d0ea7869baae63e0e9825ecbe54901ffab7dd9113db696546e9d26
+  languageName: node
+  linkType: hard
+
+"@serialport/parser-packet-length@npm:10.5.0":
+  version: 10.5.0
+  resolution: "@serialport/parser-packet-length@npm:10.5.0"
+  checksum: 10c0/8a2d80578a91c7752d71e508ea83e2cca2c77f4e40bf3bd5a4d18a8a0c750c975f7e60a7af00c91100a3f2a7cd61ce91026091694a03526b2017921ebd817abe
+  languageName: node
+  linkType: hard
+
+"@serialport/parser-readline@npm:10.5.0, @serialport/parser-readline@npm:^10.2.1":
+  version: 10.5.0
+  resolution: "@serialport/parser-readline@npm:10.5.0"
+  dependencies:
+    "@serialport/parser-delimiter": "npm:10.5.0"
+  checksum: 10c0/0ca8d62e15b70f0dcd3b819fd07759a66eb98e4f523eca220a4dca97981cdf383235ec1c972c630aaaa8a6f8938e36ff319d32de2163d49427483529797d5b79
+  languageName: node
+  linkType: hard
+
+"@serialport/parser-ready@npm:10.5.0":
+  version: 10.5.0
+  resolution: "@serialport/parser-ready@npm:10.5.0"
+  checksum: 10c0/1862a4a248f26d2f12c1218183c13348f062fbadd13f8fbaeb8aad80e9ecdaaee609d2efe5f273314c9e1305ac85bd0157d7cc7c3578754cfae724dc7322a4ce
+  languageName: node
+  linkType: hard
+
+"@serialport/parser-regex@npm:10.5.0":
+  version: 10.5.0
+  resolution: "@serialport/parser-regex@npm:10.5.0"
+  checksum: 10c0/796e844ce797eeb48720f8595a6b1e654d266a1f748404554f434e71d1557b31c117a27026642652322b60586b1ab156c16728b422f809e1413abdb1003ad8fc
+  languageName: node
+  linkType: hard
+
+"@serialport/parser-slip-encoder@npm:10.5.0":
+  version: 10.5.0
+  resolution: "@serialport/parser-slip-encoder@npm:10.5.0"
+  checksum: 10c0/7a4d1caf73398547e3cc5598c39787a8918c2e7f37ef97f7d3958c86e00d2f49d092f6dd2dd65e14a4da94dfc161600d8bbc24e274ba33505f55eb4c9974ed6b
+  languageName: node
+  linkType: hard
+
+"@serialport/parser-spacepacket@npm:10.5.0":
+  version: 10.5.0
+  resolution: "@serialport/parser-spacepacket@npm:10.5.0"
+  checksum: 10c0/0c549789efaeb087c3ad93e65137a82f1ceae18a0b8366922f157aed6157c5f5e2f9fd4cccf2c61002da44c4b39cacedf3f2f6db4e6aaa161edd612e44b06ca2
+  languageName: node
+  linkType: hard
+
+"@serialport/stream@npm:10.5.0":
+  version: 10.5.0
+  resolution: "@serialport/stream@npm:10.5.0"
+  dependencies:
+    "@serialport/bindings-interface": "npm:1.2.2"
+    debug: "npm:^4.3.2"
+  checksum: 10c0/8ee7eed452ad31c66adb66ba68873b3ce05f2366999ecfd941393363b5dd41638bcad8c433b58478d51d03f25b909d3f65f2b51df715bce3f293cac2242ce7ce
   languageName: node
   linkType: hard
 
@@ -4804,7 +4919,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:4, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.4":
+"debug@npm:4, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4":
   version: 4.3.4
   resolution: "debug@npm:4.3.4"
   dependencies:
@@ -5056,8 +5171,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "duinoapp-client-dingo@workspace:."
   dependencies:
-    "@duinoapp/files-multitool": "npm:^0.0.1"
-    "@duinoapp/upload-multitool": "npm:^0.0.1"
+    "@duinoapp/files-multitool": "npm:^0.0.2"
+    "@duinoapp/upload-multitool": "npm:^0.0.2"
     "@guolao/vue-monaco-editor": "npm:^1.3.0"
     "@mdi/font": "npm:^7.2.96"
     "@mrfrase3/ts-invaders": "npm:^0.1.2"
@@ -8183,6 +8298,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"node-addon-api@npm:^5.0.0":
+  version: 5.1.0
+  resolution: "node-addon-api@npm:5.1.0"
+  dependencies:
+    node-gyp: "npm:latest"
+  checksum: 10c0/0eb269786124ba6fad9df8007a149e03c199b3e5a3038125dfb3e747c2d5113d406a4e33f4de1ea600aa2339be1f137d55eba1a73ee34e5fff06c52a5c296d1d
+  languageName: node
+  linkType: hard
+
 "node-addon-api@npm:^7.0.0":
   version: 7.1.0
   resolution: "node-addon-api@npm:7.1.0"
@@ -8238,7 +8362,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-gyp-build@npm:^4.2.2":
+"node-gyp-build@npm:^4.2.2, node-gyp-build@npm:^4.3.0":
   version: 4.8.0
   resolution: "node-gyp-build@npm:4.8.0"
   bin:
@@ -10015,6 +10139,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"serialport@npm:^10.4.0":
+  version: 10.5.0
+  resolution: "serialport@npm:10.5.0"
+  dependencies:
+    "@serialport/binding-mock": "npm:10.2.2"
+    "@serialport/bindings-cpp": "npm:10.8.0"
+    "@serialport/parser-byte-length": "npm:10.5.0"
+    "@serialport/parser-cctalk": "npm:10.5.0"
+    "@serialport/parser-delimiter": "npm:10.5.0"
+    "@serialport/parser-inter-byte-timeout": "npm:10.5.0"
+    "@serialport/parser-packet-length": "npm:10.5.0"
+    "@serialport/parser-readline": "npm:10.5.0"
+    "@serialport/parser-ready": "npm:10.5.0"
+    "@serialport/parser-regex": "npm:10.5.0"
+    "@serialport/parser-slip-encoder": "npm:10.5.0"
+    "@serialport/parser-spacepacket": "npm:10.5.0"
+    "@serialport/stream": "npm:10.5.0"
+    debug: "npm:^4.3.3"
+  checksum: 10c0/2d3e02b95fc22606336d0dd94c783aff782f532ba060d13545d72610e25d0dc1b900fd9b2ec3e3747de52cce05e272bdb2e52eeac23f08d9475f77be569d60b0
+  languageName: node
+  linkType: hard
+
 "serve-placeholder@npm:^2.0.1":
   version: 2.0.1
   resolution: "serve-placeholder@npm:2.0.1"
@@ -10677,6 +10823,13 @@ __metadata:
   version: 1.3.3
   resolution: "tiny-invariant@npm:1.3.3"
   checksum: 10c0/65af4a07324b591a059b35269cd696aba21bef2107f29b9f5894d83cc143159a204b299553435b03874ebb5b94d019afa8b8eff241c8a4cfee95872c2e1c1c4a
+  languageName: node
+  linkType: hard
+
+"tiny-typed-emitter@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "tiny-typed-emitter@npm:2.1.0"
+  checksum: 10c0/522bed4c579ee7ee16548540cb693a3d098b137496110f5a74bff970b54187e6b7343a359b703e33f77c5b4b90ec6cebc0d0ec3dbdf1bd418723c5c3ce36d8a2
   languageName: node
   linkType: hard
 

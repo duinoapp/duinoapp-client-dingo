@@ -11,4 +11,5 @@
     </template>
   </main-grid>
   <project-init-dialog />
+  <servers-invalid-dialog />
 </template>

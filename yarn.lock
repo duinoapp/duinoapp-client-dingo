@@ -1447,16 +1447,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@duinoapp/upload-multitool@npm:^0.0.2":
-  version: 0.0.2
-  resolution: "@duinoapp/upload-multitool@npm:0.0.2"
+"@duinoapp/upload-multitool@npm:^0.0.3":
+  version: 0.0.3
+  resolution: "@duinoapp/upload-multitool@npm:0.0.3"
   dependencies:
     axios: "npm:^0.27.2"
     crypto-js: "npm:^4.1.1"
     intel-hex: "npm:^0.1.2"
     pako: "npm:^2.0.4"
     serialport: "npm:^10.4.0"
-  checksum: 10c0/dbb2577d6a54641cfb2045709d49a1b23a657936cde8890dc3b00d57a1bd8b09dfd7a6a5f1a156fde27e388de77b67434d8ab0c2cb165a98c347b027de087f39
+  checksum: 10c0/e3bce01a3b7e26389c9afd2a26229f42052b5bd8120f5288fb864696f12922561efc21645a1210d300775813447bf9428c5df564520df3688acc850a61a53c57
   languageName: node
   linkType: hard
 
@@ -3601,6 +3601,36 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vuelidate/core@npm:^2.0.3":
+  version: 2.0.3
+  resolution: "@vuelidate/core@npm:2.0.3"
+  dependencies:
+    vue-demi: "npm:^0.13.11"
+  peerDependencies:
+    "@vue/composition-api": ^1.0.0-rc.1
+    vue: ^2.0.0 || >=3.0.0
+  peerDependenciesMeta:
+    "@vue/composition-api":
+      optional: true
+  checksum: 10c0/bdd5df3692adcb9bef3dc430f3ec4c763364b27691008a4f1e3cc28ad492f5ae0e8c1cc60585ef220ecac9ad65e0a0a312e7ae3bb56a1ed05c765adb04a0d533
+  languageName: node
+  linkType: hard
+
+"@vuelidate/validators@npm:^2.0.4":
+  version: 2.0.4
+  resolution: "@vuelidate/validators@npm:2.0.4"
+  dependencies:
+    vue-demi: "npm:^0.13.11"
+  peerDependencies:
+    "@vue/composition-api": ^1.0.0-rc.1
+    vue: ^2.0.0 || >=3.0.0
+  peerDependenciesMeta:
+    "@vue/composition-api":
+      optional: true
+  checksum: 10c0/53cb362b5b561b22fb1d1021ab0d78e0fbf3324efba78a88f53b8b3ac996d546aabb9cd1069256ddb877d70841ea1f4771cb0f6b6b8a1074efbd972c6549c2fc
+  languageName: node
+  linkType: hard
+
 "@vueuse/core@npm:10.9.0, @vueuse/core@npm:^10.4.1":
   version: 10.9.0
   resolution: "@vueuse/core@npm:10.9.0"
@@ -5181,7 +5211,7 @@ __metadata:
   resolution: "duinoapp-client-dingo@workspace:."
   dependencies:
     "@duinoapp/files-multitool": "npm:^0.0.2"
-    "@duinoapp/upload-multitool": "npm:^0.0.2"
+    "@duinoapp/upload-multitool": "npm:^0.0.3"
     "@guolao/vue-monaco-editor": "npm:^1.3.0"
     "@mdi/font": "npm:^7.2.96"
     "@mrfrase3/ts-invaders": "npm:^0.1.2"
@@ -5194,6 +5224,8 @@ __metadata:
     "@typescript-eslint/parser": "npm:^6.7.2"
     "@vite-pwa/nuxt": "npm:^0.6.0"
     "@vue/eslint-config-typescript": "npm:^12.0.0"
+    "@vuelidate/core": "npm:^2.0.3"
+    "@vuelidate/validators": "npm:^2.0.4"
     "@vueuse/core": "npm:^10.4.1"
     "@vueuse/nuxt": "npm:^10.4.1"
     adm-zip: "npm:^0.5.12"

@@ -22,6 +22,10 @@ watch(panelState, () => {
       v-if="initialisedAreas.includes('search')"
       v-show="panelState.leftPanelType === 'search'"
     /> -->
+    <servers-area
+      v-if="initialisedAreas.includes('servers')"
+      v-show="panelState.leftPanelType === 'servers'"
+    />
     <projects-area
       v-if="initialisedAreas.includes('projects')"
       v-show="panelState.leftPanelType === 'projects'"

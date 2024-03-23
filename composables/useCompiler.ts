@@ -44,8 +44,7 @@ interface CompileResponse {
 export const useCompiler = defineStore('compiler', () => {
   const projects = useProjects();
   const programTerm = useProgramTerminal();
-
-  const serverUrl = 'https://compile.duino.app';
+  const { getServerUrl, checkCurrentServer } = useServers();
 
   const compiling = ref(false);
   const cache = new Map<string, CompileResponse>();
@@ -53,6 +52,7 @@ export const useCompiler = defineStore('compiler', () => {
   const compile = async (): Promise<CompileResponse> => {
     if (compiling.value) throw new Error('Already compiling.');
     if (!projects.storage) throw new Error('No storage adaptor found.');
+    if (!checkCurrentServer()) throw new Error('Invalid server URL.');
     const pathMap = await projects.storage.list('/', true) as PathMap;
     const inoFile = Object.keys(pathMap).find((k) => k.endsWith('.ino'));
     if (!inoFile) throw new Error('No .ino file found.');
@@ -90,7 +90,7 @@ export const useCompiler = defineStore('compiler', () => {
     }
 
     try {
-      const res = await fetch(`${serverUrl}/v3/compile`, {
+      const res = await fetch(`${getServerUrl()}/v3/compile`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -118,7 +118,7 @@ export const useCompiler = defineStore('compiler', () => {
   };
 
   return {
-    serverUrl,
+    getServerUrl,
     compile,
     compiling,
   };

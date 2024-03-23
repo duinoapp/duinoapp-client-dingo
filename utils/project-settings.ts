@@ -8,6 +8,10 @@ export interface MonitorSettings {
   encoding?: 'utf8' | 'ascii' | 'base64' | 'hex' | 'binary' | 'utf16le' | 'ucs2' | 'latin1'
 }
 
+export interface CompileSettings {
+  serverUrl?: string
+}
+
 export interface ProjectSettings {
   settingsVersion?: '1.0.0'
   name: string
@@ -19,6 +23,7 @@ export interface ProjectSettings {
   board: string
   invadersHighScore?: number
   monitor?: MonitorSettings
+  compile?: CompileSettings
 }
 
 export const settingsPath = '.duinoapp/settings.json';

@@ -22,3 +22,10 @@
 .transparent {
   background-color: transparent !important;
 }
+
+span.highlight {
+  background-color: rgba(var(--v-theme-primary), 0.4);
+  border-radius: 2px;
+  // give a little glow effect
+  box-shadow: 0 0 5px rgba(var(--v-theme-primary), 0.4);
+}

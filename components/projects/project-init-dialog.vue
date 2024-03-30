@@ -1,16 +1,9 @@
 <script setup lang="ts">
 import type { FilesMultitoolType } from '@duinoapp/files-multitool';
 import { typeToIcon } from '@/utils/project-display';
+import startCase from 'lodash/startCase';
 
-const {
-  dialog,
-  storageItems,
-  starterTemplates,
-  createProject,
-  openProject,
-  projectFromTemplate,
-  importProject,
-} = useProjects();
+const projects = useProjects();
 const { panelState } = usePanels();
 
 const storageType = ref(null as FilesMultitoolType | null);
@@ -19,7 +12,7 @@ const projectFile = ref(null as File | null);
 const loading = ref(false);
 
 const title = computed(() => {
-  switch (dialog.type) {
+  switch (projects.dialog.type) {
     case 'create':
       return 'Create a new project';
     case 'open':
@@ -28,60 +21,64 @@ const title = computed(() => {
       return 'Import a project';
     case 'example':
       return 'Create a new project from example';
+    case 'library':
+      return `Add a library example ${projects.dialog.inoFileName?.split('.')[0]}`;
     default:
       return 'Project action';
   }
 });
 
-const template = computed(() => dialog.type === 'example' ? starterTemplates[dialog.ref] : null);
-
-const showProjectName = computed(() => !['open', 'import'].includes(dialog.type));
-
-const showFileInput = computed(() => dialog.type === 'import');
-
+const template = computed(() => projects.dialog.type === 'example' ? starterTemplates[projects.dialog.ref] : null);
+const showProjectName = computed(() => !['open', 'import'].includes(projects.dialog.type));
+const showFileInput = computed(() => projects.dialog.type === 'import');
 const selectableStorage = computed(() => {
-  if (dialog.type === 'open') {
-    return storageItems.filter((item) => item.value !== 'indexed-db');
+  if (projects.dialog.type === 'open') {
+    return projects.storageItems.filter((item) => item.value !== 'indexed-db');
   }
-  return storageItems;
+  return projects.storageItems;
 });
+const open = computed(() => projects.dialog.open);
 
-watch(dialog, () => {
-  if (dialog.open) {
+watch(open, () => {
+  if (projects.dialog.open) {
     storageType.value = null;
     projectName.value = '';
     if (template.value) {
       projectName.value = template.value.name;
+    } else if (projects.dialog.type === 'library') {
+      projectName.value = startCase(projects.dialog.inoFileName?.split('.')[0] || '');
     }
   }
-});
+}, { immediate: true });
 
 const submit = async () => {
   if (!storageType.value) return;
   if (showProjectName.value && !projectName.value) return;
   loading.value = true;
-  if (dialog.type === 'open') {
-    await openProject(storageType.value);
-  } else if (dialog.type === 'import') {
+  if (projects.dialog.type === 'open') {
+    await projects.openProject(storageType.value);
+  } else if (projects.dialog.type === 'import') {
     if (!projectFile.value) {
       loading.value = false;
       return;
     }
-    await importProject(storageType.value, projectFile.value);
-  } else if (dialog.type === 'example') {
-    await projectFromTemplate(storageType.value, dialog.ref, projectName.value);
+    await projects.importProject(storageType.value, projectFile.value);
+  } else if (projects.dialog.type === 'example') {
+    await projects.projectFromTemplate(storageType.value, projects.dialog.ref, projectName.value);
+  } else if (projects.dialog.type === 'library') {
+    await projects.importLibraryProject(storageType.value, projects.dialog.ref, projects.dialog.inoFileName, projectName.value);
   } else {
-    await createProject(storageType.value, projectName.value);
+    await projects.createProject(storageType.value, projectName.value);
   }
   loading.value = false;
-  dialog.open = false;
+  projects.dialog.open = false;
   panelState.leftPanelType = 'explore';
 };
 
 </script>
 
 <template>
-  <v-dialog v-model="dialog.open" max-width="500">
+  <v-dialog v-model="projects.dialog.open" max-width="500">
     <v-card :title="title">
       <v-card-text>
         <div class="text-h8 mb-2">
@@ -127,7 +124,7 @@ const submit = async () => {
         <v-spacer />
         <v-btn
           variant="text"
-          @click="dialog.open = false"
+          @click="projects.dialog.open = false"
         >
           Cancel
         </v-btn>

@@ -48,8 +48,16 @@
 // };
 
 const tabs = useTabs();
+const loadedTypes = ref([] as string[]);
 
-const isFileEditorVisible = computed(() => tabs.currentTab?.type === 'file');
+const currentType = computed(() => tabs.currentTab?.type);
+const isFileEditorVisible = computed(() => currentType.value === 'file');
+
+watch(currentType, async (type) => {
+  if (type && !loadedTypes.value.includes(type)) {
+    loadedTypes.value.push(type);
+  }
+}, { immediate: true });
 
 </script>
 
@@ -60,15 +68,23 @@ const isFileEditorVisible = computed(() => tabs.currentTab?.type === 'file');
       <file-editor />
     </div>
     <welcome-area
-      v-if="tabs.currentTab?.type === 'welcome'"
+      v-if="loadedTypes.includes('welcome')"
+      v-show="currentType === 'welcome'"
       class="main-window-area"
     />
     <start-project-area
-      v-if="tabs.currentTab?.type === 'start-project'"
+      v-if="loadedTypes.includes('start-project')"
+      v-show="currentType === 'start-project'"
       class="main-window-area"
     />
     <invaders-area
-      v-if="tabs.currentTab?.type === 'invaders'"
+      v-if="loadedTypes.includes('invaders')"
+      v-show="currentType === 'invaders'"
+      class="main-window-area"
+    />
+    <libraries-area
+      v-if="loadedTypes.includes('libraries')"
+      v-show="currentType === 'libraries'"
       class="main-window-area"
     />
   </div>

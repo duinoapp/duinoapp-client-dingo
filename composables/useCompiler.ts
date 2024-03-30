@@ -45,6 +45,7 @@ export const useCompiler = defineStore('compiler', () => {
   const projects = useProjects();
   const programTerm = useProgramTerminal();
   const { getServerUrl, checkCurrentServer } = useServers();
+  const { getLibsForCompiler } = useLibraries();
 
   const compiling = ref(false);
   const cache = new Map<string, CompileResponse>();
@@ -74,9 +75,12 @@ export const useCompiler = defineStore('compiler', () => {
       files.push({ content, name: `${prefix}/${path}` });
     }, Promise.resolve());
 
+    const libs = getLibsForCompiler(projects.settings?.libraries || []);
+
     const body = JSON.stringify({
       fqbn: projects.settings?.board || 'arduino:avr:uno',
       files,
+      libs,
     } as CompileRequest);
     const key = await hash(body);
 

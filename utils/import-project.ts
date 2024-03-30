@@ -45,14 +45,16 @@ const filesObjectToArray = (filesObject: Record<string, File>, path: string = ''
  * @param file The zip file to import
  * @returns The extracted project { settings: ProjectSettings, filesObject: Record<string, File>}
  */
-export const importProject = async (file: File): Promise<ExtractedProject> => {
+export const importProject = async (file: File, inoFileName?: string): Promise<ExtractedProject> => {
   const archive = await Archive.open(file);
   const filesArray = await archive.getFilesArray();
   const settingsFile = filesArray.find((f) => /(^|\/)\.duinoapp\/settings\.json$/.test(`${f.path}${f.file.name}`));
-  const inoFile = filesArray.find((f) => /\w+\.ino$/.test(f.file.name));
+  const inoFile = filesArray.find((f) => /\w+\.ino$/.test(f.file.name) && (!inoFileName || f.file.name === inoFileName));
   if (!settingsFile && !inoFile) throw new Error('Archive does not contain a valid project.');
   if (!inoFile) throw new Error('Archive does not contain a valid project root file.');
+  console.log('inoFile', inoFile);
   let extractedFiles = await archive.extractFiles();
+  console.log('extractedFiles', extractedFiles);
   let projectPath;
   if (settingsFile) {
     projectPath = settingsFile.path.replace(/\/?\.duinoapp\/$/, '');
@@ -61,6 +63,7 @@ export const importProject = async (file: File): Promise<ExtractedProject> => {
   }
   if (projectPath) {
     projectPath.split('/').forEach((dir: string) => {
+      if (!dir) return;
       extractedFiles = extractedFiles[dir];
     });
   }
@@ -88,10 +91,10 @@ export const importProject = async (file: File): Promise<ExtractedProject> => {
  * @param url The URL of the zip file to import
  * @returns The extracted project { settings: ProjectSettings, filesObject: Record<string, File>}
 */
-export const importProjectFromUrl = async (url: string): Promise<ExtractedProject> => {
+export const importProjectFromUrl = async (url: string, inoFileName?: string): Promise<ExtractedProject> => {
   const res = await fetch(url);
   const blob = await res.blob();
-  return importProject(blob as File);
+  return importProject(blob as File, inoFileName);
 }
 
 /**
@@ -105,3 +108,24 @@ export const importProjectFromTemplate = async (templateId: string): Promise<Ext
   return importProjectFromUrl(template.src);
 }
 
+/**
+ * Loads a list of ino files from a project zip
+ * @param file The zip file to import
+ * @returns The list of ino file names
+*/
+export const getProjectInoFiles = async (file: File): Promise<string[]> => {
+  const archive = await Archive.open(file);
+  const filesArray = await archive.getFilesArray();
+  return filesArray.filter((f) => /\w+\.ino$/.test(f.file.name)).map((f) => f.file.name);
+}
+
+/**
+  * Loads a list of ino files from a zip file URL
+  * @param url The URL of the zip file to import
+  * @returns The list of ino file names
+*/
+export const getProjectInoFilesFromUrl = async (url: string): Promise<string[]> => {
+  const res = await fetch(url);
+  const blob = await res.blob();
+  return getProjectInoFiles(blob as File);
+}

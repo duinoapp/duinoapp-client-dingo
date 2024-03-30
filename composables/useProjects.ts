@@ -34,7 +34,7 @@ interface Project extends BasicProjectRef {
   lastOpened: number
 };
 
-type InitDialogType = 'import' | 'create' | 'open' | 'example';
+type InitDialogType = 'import' | 'create' | 'open' | 'example' | 'library';
 
 const adaptorOptionsMap = {
   'fsa-api': { db: 'duinoapp', startIn: 'documents' },
@@ -121,6 +121,7 @@ export const useProjects = defineStore('projects', {
       open: false,
       type: '' as InitDialogType,
       ref: '',
+      inoFileName: '',
     },
   }),
   getters: {
@@ -272,7 +273,7 @@ export const useProjects = defineStore('projects', {
       projectRef.name = mergedSettings.name;
       this.removeVolatileAction('updateSettings');
     },
-    async openExtractedProject(type: FilesMultitoolType, extracted: ExtractedProject, name?: string): Promise<Project> {
+    async openExtractedProject(type: FilesMultitoolType, extracted: ExtractedProject, settings?: Partial<ProjectSettings>): Promise<Project> {
       const id = genId();
       const projectRef = { id, name: extracted.settings.name, type } as BasicProjectRef;
       const project = await initialiseProject(projectRef, false);
@@ -289,28 +290,41 @@ export const useProjects = defineStore('projects', {
         const path = f.path.endsWith('.ino') ? getInoFileName(projectRef.name) : f.path;
         await project.storage.writeFile(path, await f.file.arrayBuffer());
       }));
-      if (name && name !== extracted.settings.name) {
-        extracted.settings.name = name;
-      }
+      Object.assign(extracted.settings, settings || {});
       await this.updateSettings(extracted.settings);
       return project;
     },
     async projectFromTemplate(type: FilesMultitoolType, template: string, name?: string): Promise<Project> {
       const extracted = await importProjectFromTemplate(template);
-      return this.openExtractedProject(type, extracted, name);
+      return this.openExtractedProject(type, extracted, { name });
     },
     async projectFromUrl(type: FilesMultitoolType, url: string, name?: string): Promise<Project> {
       const extracted = await importProjectFromUrl(url);
-      return this.openExtractedProject(type, extracted, name);
+      return this.openExtractedProject(type, extracted, { name });
     },
     async importProject(type: FilesMultitoolType, file: File, name?: string): Promise<Project> {
       const extracted = await importProject(file);
-      return this.openExtractedProject(type, extracted, name);
+      return this.openExtractedProject(type, extracted, { name });
     },
-    initDialog(type: InitDialogType, ref?: string): void {
+    async importLibraryProject(type: FilesMultitoolType, ref: string, inoFileName: string, name?: string): Promise<Project> {
+      const { getLibrary } = useLibraries();
+      const library = await getLibrary(ref);
+      const settings = {
+        name,
+        libraries: [ref],
+        board: this.settings?.board,
+        compile: this.settings?.compile,
+        monitor: this.settings?.monitor,
+      };
+      if (!library?.resources?.url) throw new Error('Library not found.');
+      const extracted = await importProjectFromUrl(library?.resources?.url, inoFileName);
+      return this.openExtractedProject(type, extracted, settings);
+    },
+    initDialog(type: InitDialogType, ref?: string, inoFileName?: string): void {
       this.dialog.open = true;
       this.dialog.type = type;
       this.dialog.ref = ref ?? '';
+      this.dialog.inoFileName = inoFileName ?? '';
     }
   },
 });

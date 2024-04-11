@@ -19,11 +19,6 @@ const headers = [
 
 const searchRes = computed(() => searchLibs(search.value, page.value - 1, itemsPerPage.value));
 
-const loadItems = (opts: { page: number, itemsPerPage: number }) => {
-  page.value = opts.page;
-  itemsPerPage.value = opts.itemsPerPage;
-};
-
 const normName = (name: string) => name
   .replace(/<[^>]+>/g, '')
   .replace(/\s+/g, ' ')
@@ -53,6 +48,7 @@ watch(search, (to, from) => {
     <v-divider class="my-2" />
     <v-data-table-server
       v-model:items-per-page="itemsPerPage"
+      v-model:page="page"
       :headers="headers"
       :items="searchRes.data"
       :items-length="searchRes.total"
@@ -60,7 +56,6 @@ watch(search, (to, from) => {
       :search="search"
       item-value="name"
       style="height: calc(100% - 57px);"
-      @update:options="loadItems"
     >
       <template #item.name="{ item }">
         <span v-html="searchHighlight(item.name, search)" />

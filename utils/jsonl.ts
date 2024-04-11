@@ -11,8 +11,8 @@ export const parseJsonl = async (arrayBuff: ArrayBuffer): Promise<any[]> => {
       try {
         const parsed = JSON.parse(json);
         arr.push(parsed);
-        if (arr.length % 50 === 0) {
-          await asyncTimeout(0);
+        if (arr.length % 10 === 0) {
+          await asyncTimeout(10);
         }
       } catch (e) {
         console.error('Failed to parse JSONL:', json);

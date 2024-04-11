@@ -87,6 +87,11 @@ watch(currentType, async (type) => {
       v-show="currentType === 'libraries'"
       class="main-window-area"
     />
+    <boards-area
+      v-if="loadedTypes.includes('boards')"
+      v-show="currentType === 'boards'"
+      class="main-window-area"
+    />
   </div>
 </template>
 

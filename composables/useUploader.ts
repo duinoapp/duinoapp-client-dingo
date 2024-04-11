@@ -6,6 +6,7 @@ export const useUploader = defineStore('uploader', () => {
   const programTerm = useProgramTerminal();
   const serialTerm = useSerialTerminal();
   const serial = useSerial();
+  const boards = useBoards();
 
   const uploading = ref(false);
 
@@ -28,9 +29,9 @@ export const useUploader = defineStore('uploader', () => {
       flashFreq: compiled.flashFreq,
       flashMode: compiled.flashMode,
       speed: 115200,
-      uploadSpeed: 115200,
-      tool: 'avr',
-      cpu: 'atmega328p',
+      uploadSpeed: Number(boards.boardData?.options?.UploadSpeed || 115200),
+      tool: boards?.currentBoard?.properties?.upload?.tool || 'avrdude',
+      cpu: boards?.currentBoard?.properties?.build?.mcu || 'atmega328p',
       stdout: programTerm,
       verbose: true,
     } as ProgramConfig;

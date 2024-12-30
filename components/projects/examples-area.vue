@@ -9,7 +9,7 @@ const projects = useProjects();
       <v-list-item
         v-for="project in projects.starterTemplates"
         :key="project.id"
-        @click="projects.initDialog('example', project.id)"
+        @click="projects.initDialog('example', { ref: project.id })"
         :title="project.name"
         :subtitle="project.description"
       />

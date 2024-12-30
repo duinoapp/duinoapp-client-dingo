@@ -13,6 +13,7 @@
   "devDependencies": {
     "@guolao/vue-monaco-editor": "^1.3.0",
     "@mdi/font": "^7.2.96",
+    "@mrfrase3/circuit-hero": "^1.0.1",
     "@mrfrase3/ts-invaders": "^0.1.2",
     "@nuxt/devtools": "^1.0.8",
     "@nuxt/kit": "^3.10.3",
@@ -45,7 +46,7 @@
     "xterm-addon-fit": "^0.8.0"
   },
   "dependencies": {
-    "@duinoapp/files-multitool": "^0.0.2",
+    "@duinoapp/files-multitool": "^0.0.4",
     "@duinoapp/upload-multitool": "^0.0.3",
     "@pinia/nuxt": "^0.5.1",
     "@vuelidate/core": "^2.0.3",

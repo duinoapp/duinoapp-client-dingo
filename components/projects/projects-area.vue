@@ -2,9 +2,18 @@
 import { typeToIcon } from '@/utils/project-display';
 
 const projects = useProjects();
+const tabs = useTabs();
+
+const removeProjectId = ref<string | null>(null);
 
 const typeToText = (type: string) => {
   return projects.storageItems.find((item) => item.value === type)?.text || type;
+};
+
+const removeProject = () => {
+  if (!removeProjectId.value) return;
+  projects.removeProject(removeProjectId.value);
+  removeProjectId.value = null;
 };
 
 </script>
@@ -48,7 +57,7 @@ const typeToText = (type: string) => {
         v-for="project in projects.projectItems"
         :key="project.value"
         :active="project.disabled"
-        :class="{ 'text-primary': project.disabled }"
+        :class="{ 'text-primary': project.disabled, 'project-list-item': true }"
         @click="!project.disabled && projects.loadProject(project.value)"
       >
         <v-list-item-title>
@@ -69,8 +78,45 @@ const typeToText = (type: string) => {
             </v-tooltip>
           </span>
         </v-list-item-title>
+        <template #append>
+          <v-btn
+            v-if="!project.disabled"
+            size="x-small"
+            icon="mdi-trash-can-outline"
+            variant="text"
+            class="project-list-item-action-btn"
+            @click.stop="removeProjectId = project.value"
+          />
+          <v-btn
+            v-else
+            size="x-small"
+            icon="mdi-cog-outline"
+            variant="text"
+            class="project-list-item-action-btn"
+            @click.stop="tabs.addTab({ type: 'project-settings', name: 'Project Settings' })"
+          />
+        </template>
       </v-list-item>
     </v-list>
+    <v-dialog
+      :model-value="!!removeProjectId"
+      max-width="400"
+      @update:model-value="removeProjectId = null"
+    >
+      <v-card>
+        <v-card-title>
+          Remove project?
+        </v-card-title>
+        <v-card-text>
+          Are you sure you want to remove this project?
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn @click="removeProjectId = null">Cancel</v-btn>
+          <btn-primary @click="removeProject">Remove</btn-primary>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -78,6 +124,18 @@ const typeToText = (type: string) => {
 
 .project-action-btn {
   min-width: 0px !important;
+}
+
+.project-list-item {
+  .project-list-item-action-btn {
+    opacity: 0;
+  }
+
+  &:hover {
+    .project-list-item-action-btn {
+      opacity: 1;
+    }
+  }
 }
 
 </style>

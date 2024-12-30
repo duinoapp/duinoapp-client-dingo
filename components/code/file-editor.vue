@@ -11,7 +11,8 @@ const loading = ref(false);
 
 const currentTabId = computed(() => tabs.currentTab?.id);
 const currentTabPath = computed(() => tabs.currentTab?.path);
-const pathContent = computed(() => pathContentCache.value.get(currentTabPath.value || '') || '');
+const pathKey = computed(() => `${tabs.currentTab?.projectId}://${tabs.currentTab?.path}`);
+const pathContent = computed(() => pathContentCache.value.get(pathKey.value || '') || '');
 const language = computed(() => getLanguageFromContentType(getContentTypeFromFileName(tabs.currentTab?.path || '')));
 // const editorRef = computed(() => `${tabs.currentTab?.projectId}/${tabs.currentTab?.path}`);
 
@@ -19,22 +20,34 @@ const loadFileContent = async (path: string) => {
   if (tabs.currentTab?.type !== 'file') return;
   if (!projects.storage) return;
   loading.value = true;
-  const content = await projects.storage.readFile(path);
+  try {
+    const content = await projects.storage.readFile(path);
+    const key = `${projects.currentProjectId}://${path}`;
+    pathContentCache.value.set(key, content);
+  } catch (error) {
+    console.error(error);
+    const tab = tabs.findTab('file', path);
+    if (tab) tabs.closeTab(tab);
+  }
   loading.value = false;
-  pathContentCache.value.set(path, content);
 };
 
 const savePaths = async () => {
   const paths = Array.from(pathsToSave.value);
   pathsToSave.value.clear();
-  await Promise.all(paths.map((path) => projects.storage?.writeFile(path, pathContentCache.value.get(path) || '')));
+  await Promise.all(paths.map((key) => {
+    const [projectId, path] = key.split('://');
+    if (projectId !== projects.currentProjectId) return;
+    projects.storage?.writeFile(path, pathContentCache.value.get(key) || '');
+  }));
   if (!pathsToSave.value.size) projects.removeVolatileAction('file-editor:savePath');
 };
 
 const savePath = (path: string, content: string) => {
   projects.addVolatileAction('file-editor:savePath');
-  pathContentCache.value.set(path, content);
-  pathsToSave.value.add(path);
+  pathContentCache.value.set(pathKey.value, content);
+  const key = `${projects.currentProjectId}://${path}`;
+  pathsToSave.value.add(key);
   if (writeTimeout.value) clearTimeout(writeTimeout.value);
   writeTimeout.value = setTimeout(savePaths, 500);
 };

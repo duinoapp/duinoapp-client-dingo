@@ -2,6 +2,7 @@
 import type { FilesMultitoolType } from '@duinoapp/files-multitool';
 import { typeToIcon } from '@/utils/project-display';
 import startCase from 'lodash/startCase';
+import { projectNameRules, validateRules } from './project-utils';
 
 const projects = useProjects();
 const { panelState } = usePanels();
@@ -10,6 +11,7 @@ const storageType = ref(null as FilesMultitoolType | null);
 const projectName = ref('');
 const projectFile = ref(null as File | null);
 const loading = ref(false);
+const errored = ref(false);
 
 const title = computed(() => {
   switch (projects.dialog.type) {
@@ -53,26 +55,40 @@ watch(open, () => {
 
 const submit = async () => {
   if (!storageType.value) return;
-  if (showProjectName.value && !projectName.value) return;
+  if (showProjectName.value && !validateRules(projectNameRules, projectName.value)) return;
   loading.value = true;
-  if (projects.dialog.type === 'open') {
-    await projects.openProject(storageType.value);
-  } else if (projects.dialog.type === 'import') {
-    if (!projectFile.value) {
-      loading.value = false;
-      return;
+  errored.value = false;
+  try {
+    if (projects.dialog.type === 'open') {
+      await projects.openProject(storageType.value);
+    } else if (projects.dialog.type === 'import') {
+      if (!projectFile.value) {
+        loading.value = false;
+        return;
+      }
+      await projects.importProject(storageType.value, projectFile.value);
+    } else if (projects.dialog.type === 'example') {
+      await projects.projectFromTemplate(storageType.value, projects.dialog.ref, projectName.value);
+    } else if (projects.dialog.type === 'library') {
+      await projects.importLibraryProject(storageType.value, projects.dialog.ref, projects.dialog.inoFileName, projectName.value);
+    } else {
+      await projects.createProject(storageType.value, projectName.value);
     }
-    await projects.importProject(storageType.value, projectFile.value);
-  } else if (projects.dialog.type === 'example') {
-    await projects.projectFromTemplate(storageType.value, projects.dialog.ref, projectName.value);
-  } else if (projects.dialog.type === 'library') {
-    await projects.importLibraryProject(storageType.value, projects.dialog.ref, projects.dialog.inoFileName, projectName.value);
-  } else {
-    await projects.createProject(storageType.value, projectName.value);
+    projects.dialog.open = false;
+    panelState.leftPanelType = 'explore';
+  } catch (e) {
+    console.error(e);
+    errored.value = true;
+  } finally {
+    loading.value = false;
   }
-  loading.value = false;
+};
+
+const close = () => {
   projects.dialog.open = false;
-  panelState.leftPanelType = 'explore';
+  if (projects.dialog.onCancel) {
+    projects.dialog.onCancel();
+  }
 };
 
 </script>
@@ -81,6 +97,13 @@ const submit = async () => {
   <v-dialog v-model="projects.dialog.open" max-width="500">
     <v-card :title="title">
       <v-card-text>
+        <v-alert
+          v-if="errored"
+          type="error"
+          variant="tonal"
+          class="mb-2"
+          text="An error occurred while trying to create the project, please try again."
+        />
         <div class="text-h8 mb-2">
           Select storage type:
           <v-tooltip location="top">
@@ -116,7 +139,7 @@ const submit = async () => {
           v-if="showProjectName"
           v-model="projectName"
           label="Project name"
-          outlined
+          :rules="projectNameRules"
           dense
         />
       </v-card-text>
@@ -124,7 +147,7 @@ const submit = async () => {
         <v-spacer />
         <v-btn
           variant="text"
-          @click="projects.dialog.open = false"
+          @click="close"
         >
           Cancel
         </v-btn>

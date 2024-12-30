@@ -2,7 +2,7 @@ import { set } from '@vueuse/core';
 import { defineStore } from 'pinia';
 import type { FilesMultitoolChangeEvent } from '@duinoapp/files-multitool';
 
-export type TabType = 'file' | 'welcome' | 'settings' | 'start-project' | 'invaders' | 'boards' | 'libraries';
+export type TabType = 'file' | 'welcome' | 'settings' | 'start-project' | 'invaders' | 'boards' | 'libraries' | 'project-settings';
 
 export interface ProjectTab {
   id: string
@@ -58,10 +58,10 @@ export const useTabs = defineStore('tabs', () => {
   });
 
   const selectTab = (tab: ProjectTab): void => {
-    const newTabs = tabs.value.map((t) => (t.projectId === tab.projectId ? {
+    const newTabs = tabs.value.map((t) => (t.projectId === tab.projectId ? reactive({
       ...t,
       isCurrent: t.id === tab.id,
-    } : t));
+    }) : t));
     tabs.value = newTabs;
   };
 
@@ -98,7 +98,7 @@ export const useTabs = defineStore('tabs', () => {
       isTemporary: tab.isTemporary !== false,
       ...tab,
     };
-    tabs.value.push(newTab);
+    tabs.value.push(reactive(newTab));
     selectTab(newTab);
   };
 
@@ -142,11 +142,9 @@ export const useTabs = defineStore('tabs', () => {
     }
   };
 
-  const currentProjectId = computed(() => projects.currentProject?.id);
   const currentStorage = ref(projects.storage);
-  watch(currentProjectId, () => {
-    if (!currentProjectId.value) return;
-    if (projectTabs.value.some((t) => t.type === 'file')) return;
+  watch(() => projects.currentProjectId, (value) => {
+    if (!value) return;
     if (currentStorage.value) currentStorage.value.off?.('file-changed', fileChangeHandler);
     currentStorage.value = projects.storage;
     currentStorage.value?.on?.('file-changed', fileChangeHandler);

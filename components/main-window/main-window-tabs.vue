@@ -38,6 +38,8 @@ const getIcon = (tab: ProjectTab) => {
       return 'mdi-memory';
     case 'libraries':
       return 'mdi-book-open-variant';
+    case 'project-settings':
+      return 'mdi-folder-cog-outline';
     default:
       return 'mdi-file-question';
   }
@@ -92,6 +94,7 @@ const getIconColor = (tab: ProjectTab) => {
 .file-tab {
   margin-right: 1px;
   border-radius: 0;
+  user-select: none;
 
   &:not(.text-primary):deep(.v-chip__close) {
     opacity: 0;

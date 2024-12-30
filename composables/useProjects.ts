@@ -86,11 +86,11 @@ const initialiseProject = async (project: BasicProjectRef, isExisting?: boolean)
   const storage = new FilesMultitool(project.type, project.id, adaptorOpts);
   await storage.init();
   const inoFileName = await validateProjectDirectory(storage, isExisting);
-  const settings = await parseProjectSettings(storage, getProjectNameFromIno(inoFileName));
+  const settings = await parseProjectSettings(storage, getProjectNameFromIno(inoFileName) || project.name);
   project.name = settings.name;
   if (!inoFileName) {
     await storage.writeFile(getInoFileName(project.name), blankIno);
-  } else if (inoFileName !== getInoFileName(project.name)) {
+  } else if (inoFileName.replace(/(^\/)/g, '') !== getInoFileName(project.name)) {
     await storage.rename(inoFileName, getInoFileName(project.name));
   }
   return {
@@ -122,6 +122,7 @@ export const useProjects = defineStore('projects', {
       type: '' as InitDialogType,
       ref: '',
       inoFileName: '',
+      onCancel: null as (() => void) | null,
     },
   }),
   getters: {
@@ -193,12 +194,19 @@ export const useProjects = defineStore('projects', {
         throw new Error(`Project with id ${projectId} not found.`);
       }
       const oldCurrentProject = this._currentProject;
-      const project = await initialiseProject(projectRef);
+      const project = await initialiseProject(projectRef, true);
       projectRef.lastOpened = project.lastOpened;
       this.local.currentProjectId = projectId;
       this._currentProject = project;
       if (oldCurrentProject) {
         await this.closeProject(oldCurrentProject);
+      }
+    },
+    removeProject(projectId: string): void {
+      this.local.projectRefs = this.local.projectRefs.filter((p) => p.id !== projectId);
+      if (this.local.currentProjectId === projectId) {
+        this.local.currentProjectId = null;
+        this._currentProject = null;
       }
     },
     async renameProject(name: string): Promise<void> {
@@ -236,16 +244,16 @@ export const useProjects = defineStore('projects', {
       }
       return project;
     },
-    async init(): Promise<void> {
+    async init(noLoad?: boolean): Promise<void> {
       if (!this.local.currentProjectId) return;
       const projectRef = this.local.projectRefs.find((p) => p.id === this.local.currentProjectId);
-      if (!projectRef) {
-        this.local.currentProjectId = null;
+      this.local.currentProjectId = null;
+      if (!projectRef || noLoad) {
         return;
       }
-      const project = await initialiseProject(projectRef, true);
-      projectRef.lastOpened = project.lastOpened;
-      this._currentProject = project;
+      setTimeout(() => {
+        this.loadProject(projectRef.id);
+      }, 100);
     },
     async updateSettings(settings: Partial<ProjectSettings>): Promise<void> {
       if (!this._currentProject) {
@@ -320,11 +328,15 @@ export const useProjects = defineStore('projects', {
       const extracted = await importProjectFromUrl(library?.resources?.url, inoFileName);
       return this.openExtractedProject(type, extracted, settings);
     },
-    initDialog(type: InitDialogType, ref?: string, inoFileName?: string): void {
+    initDialog(
+      type: InitDialogType,
+      { ref, inoFileName, onCancel }: { ref?: string, inoFileName?: string, onCancel?: () => void } = {}
+    ): void {
       this.dialog.open = true;
       this.dialog.type = type;
       this.dialog.ref = ref ?? '';
       this.dialog.inoFileName = inoFileName ?? '';
+      this.dialog.onCancel = onCancel ?? null;
     }
   },
 });

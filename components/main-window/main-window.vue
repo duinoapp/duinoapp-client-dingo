@@ -92,6 +92,11 @@ watch(currentType, async (type) => {
       v-show="currentType === 'boards'"
       class="main-window-area"
     />
+    <project-settings-area
+      v-if="loadedTypes.includes('project-settings')"
+      v-show="currentType === 'project-settings'"
+      class="main-window-area"
+    />
   </div>
 </template>
 

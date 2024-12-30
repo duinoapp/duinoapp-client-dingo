@@ -1437,13 +1437,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@duinoapp/files-multitool@npm:^0.0.2":
-  version: 0.0.2
-  resolution: "@duinoapp/files-multitool@npm:0.0.2"
+"@duinoapp/files-multitool@npm:^0.0.4":
+  version: 0.0.4
+  resolution: "@duinoapp/files-multitool@npm:0.0.4"
   dependencies:
     node-fetch: "npm:^3.3.1"
     tiny-typed-emitter: "npm:^2.1.0"
-  checksum: 10c0/818ff901095b6433ae2edbd19dc08421a84e10538b7bf205cb57421465ef6f8078040b435f0ff364f2ff02a9e3d86593ab7951dea73f2bee320f2bbc87240311
+  checksum: 10c0/609c5b4ae866e0f0d3f5edd88caacfcb10624e6b7d3a17fe1b6f6d1d97705639e036813576ef69220deedfd7d750c8384c453623147aa46ace179fa70f6a73b0
   languageName: node
   linkType: hard
 
@@ -1996,6 +1996,13 @@ __metadata:
   peerDependencies:
     monaco-editor: ">= 0.21.0 < 1"
   checksum: 10c0/68938350adf2f42363a801d87f5d00c87d397d4cba7041141af10a9216bd35c85209b4723a26d56cb32e68eef61471deda2a450f8892891118fbdce7fa1d987d
+  languageName: node
+  linkType: hard
+
+"@mrfrase3/circuit-hero@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@mrfrase3/circuit-hero@npm:1.0.1"
+  checksum: 10c0/3ffd9fdc0e0389619547d870f9a314665ca9f6d17066c19315c55d28dfcc203989593d7bf89f2af3765bdf82d175f95e55af2aae8ebe2369a062c1f6211e95ec
   languageName: node
   linkType: hard
 
@@ -5226,10 +5233,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "duinoapp-client-dingo@workspace:."
   dependencies:
-    "@duinoapp/files-multitool": "npm:^0.0.2"
+    "@duinoapp/files-multitool": "npm:^0.0.4"
     "@duinoapp/upload-multitool": "npm:^0.0.3"
     "@guolao/vue-monaco-editor": "npm:^1.3.0"
     "@mdi/font": "npm:^7.2.96"
+    "@mrfrase3/circuit-hero": "npm:^1.0.1"
     "@mrfrase3/ts-invaders": "npm:^0.1.2"
     "@nuxt/devtools": "npm:^1.0.8"
     "@nuxt/kit": "npm:^3.10.3"

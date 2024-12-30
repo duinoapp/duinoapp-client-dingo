@@ -25,7 +25,7 @@ export const useServers = defineStore('server', () => {
   
   const defaultServers = [
     ...(devCompileServer ? [devCompileServer] : []),
-    'https://compile.duino.app',
+    'https://compile-beta.duino.app',
   ] as string[];
   const serverUrls = useLocalStorage('compile-servers', defaultServers, { mergeDefaults: true });
   serverUrls.value = [...new Set(serverUrls.value)];

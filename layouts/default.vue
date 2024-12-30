@@ -2,9 +2,12 @@
 
 const projects = useProjects();
 
-onMounted(async () => {
-  await projects.init();
-});
+const dialog = ref(!!projects?.local.currentProjectId);
+
+const confirm = (noLoad?: boolean) => {
+  dialog.value = false;
+  projects.init(noLoad);
+};
 
 const year = new Date().getFullYear();
 const { public: { version } } = useRuntimeConfig();
@@ -31,6 +34,22 @@ const { public: { version } } = useRuntimeConfig();
     </v-navigation-drawer>
     <v-main>
       <slot />
+      <v-dialog v-model="dialog" persistent max-width="400">
+        <v-card>
+          <v-card-title>
+            Continue with existing project?
+          </v-card-title>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn @click="confirm(true)">
+              Cancel
+            </v-btn>
+            <btn-primary @click="confirm(false)">
+              Continue
+            </btn-primary>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
     </v-main>
     <v-footer class="d-flex" dense app>
       <div>

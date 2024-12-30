@@ -44,7 +44,7 @@ export const getProjectNameFromIno = (inoName: string): string => {
   return pascalCase(inoName.replace(/\.ino$/, ''));
 }
 
-export const getDefaultProjectSettings = (name: string = 'New Project') => ({
+export const getDefaultProjectSettings = (name: string = 'New Project'): ProjectSettings => ({
   settingsVersion: '1.0.0',
   name: name,
   author: '',
@@ -52,7 +52,7 @@ export const getDefaultProjectSettings = (name: string = 'New Project') => ({
   editor: 'text',
   libraries: [],
   board: 'arduino:avr:uno',
-} as ProjectSettings);
+});
 
 export const saveProjectSettings = async (storage: FilesMultitool, settings: ProjectSettings): Promise<void> => {
   await storage.writeFile(settingsPath, JSON.stringify(settings, null, 2));

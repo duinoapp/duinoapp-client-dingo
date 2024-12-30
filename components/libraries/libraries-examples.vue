@@ -16,11 +16,10 @@ const libUrl = computed(() => props.library?.resources?.url);
 const emit = defineEmits(['close']);
 
 const openLibraryExample = (fileName: string) => {
-  initDialog(
-    'library',
-    `${props.library?.name}@latest`,
-    fileName,
-  );
+  initDialog('library', {
+    ref: `${props.library?.name}@latest`,
+    inoFileName: fileName,
+  });
   emit('close');
 };
 

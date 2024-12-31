@@ -9,17 +9,18 @@ const { public: { version } } = useRuntimeConfig();
   <v-app>
     <v-app-bar rounded="pill" scroll-behavior="elevate" class="navbar">
       <v-toolbar-title>
-        <div class="d-flex align-center">
+        <nuxt-link to="/" class="d-flex align-center title-link">
           <v-img
             class="mr-2"
             src="/duinoapp.svg"
             max-height="48"
+            width="48"
             max-width="48"
           />
-          <div class="text-brandon">
+          <div class="text-brandon" style="min-width: 100px;">
             DuinoApp
           </div>
-        </div>
+        </nuxt-link>
       </v-toolbar-title>
       <v-spacer />
       <btn-github class="mr-2" />
@@ -39,6 +40,13 @@ const { public: { version } } = useRuntimeConfig();
       <div>
         DuinoApp &copy; {{ year }} - v{{ version }}
       </div>
+      <v-spacer />
+      <v-btn to="/privacy" variant="text" size="small" prepend-icon="mdi-shield-check">
+        Privacy Policy
+      </v-btn>
+      <v-btn to="/terms" variant="text" size="small" prepend-icon="mdi-scale-balance">
+        Terms of Service
+      </v-btn>
     </v-footer>
   </v-app>
 </template>
@@ -64,6 +72,15 @@ const { public: { version } } = useRuntimeConfig();
   @media (min-width: 1920px) {
     max-width: 1800px;
     transform: translate(calc(50vw - 900px), 0)!important;
+  }
+
+  .v-toolbar-title {
+    flex: unset;
+
+    .title-link {
+      text-decoration: none;
+      color: inherit;
+    }
   }
 }
 

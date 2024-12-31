@@ -70,10 +70,16 @@ watch([width, height, canvas], () => {
   <v-divider />
 </template>
 
+<style lang="scss">
+.v-application__wrap {
+  z-index: 1;
+}
+</style>
+
 <style scoped lang="scss">
 
 .background-canvas {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   z-index: -1;
@@ -82,7 +88,7 @@ watch([width, height, canvas], () => {
 .hero-landing {
   height: 100vh;
   position: relative;
-  z-index: 1;
+  z-index: 0;
   
   &.hero-landing-mounted {
     margin-top: -64px;
@@ -103,6 +109,12 @@ watch([width, height, canvas], () => {
       border-radius: 4px;
       margin-left: -8px;
       padding: 0 8px;
+    }
+
+
+    @media (min-width: 2560px) {
+      max-width: 1800px;
+      padding-top: max(25vh, 128px);
     }
   }
 

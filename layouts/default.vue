@@ -24,12 +24,13 @@ const { public: { version } } = useRuntimeConfig();
     <v-main>
       <slot />
       <project-continue-dialog />
+      <compatibility-dialog />
     </v-main>
-    <v-footer class="d-flex" dense app>
+    <!-- <v-footer class="d-flex" dense app>
       <div>
         DuinoApp &copy; {{ year }} - v{{ version }}
       </div>
-    </v-footer>
+    </v-footer> -->
   </v-app>
 </template>
 

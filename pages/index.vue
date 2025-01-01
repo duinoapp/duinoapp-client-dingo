@@ -2,6 +2,9 @@
 definePageMeta({
   layout: 'site',
 });
+
+const { isSerialSupported } = useBrowserCompat();
+
 </script>
 
 <template>
@@ -166,9 +169,17 @@ definePageMeta({
           <v-col cols="12" class="text-center">
             <h2 class="text-h3 mb-6">Ready to Start Building?</h2>
             <p class="text-subtitle-1 mb-6">What are you waiting for? Jump in and start coding!</p>
-            <btn-primary to="/code" size="x-large" nuxt>
+            <btn-primary
+              :to="isSerialSupported ? '/code' : null"
+              size="x-large" 
+              nuxt
+              :disabled="!isSerialSupported"
+            >
               Launch DuinoApp
             </btn-primary>
+            <p v-if="!isSerialSupported" class="text-caption mt-2 text-warning">
+              Your browser doesn't support the required features to use DuinoApp.
+            </p>
           </v-col>
         </v-row>
 

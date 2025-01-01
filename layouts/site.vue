@@ -2,6 +2,7 @@
 
 const year = new Date().getFullYear();
 const { public: { version } } = useRuntimeConfig();
+const { isSerialSupported } = useBrowserCompat();
 
 </script>
 
@@ -26,9 +27,10 @@ const { public: { version } } = useRuntimeConfig();
       <btn-github class="mr-2" />
       <btn-discord class="mr-2" />
       <btn-primary
-        to="/code"
+        :to="isSerialSupported ? '/code' : null"
         class="d-none d-md-flex"
         nuxt
+        :disabled="!isSerialSupported"
       >
         Start Coding
       </btn-primary>

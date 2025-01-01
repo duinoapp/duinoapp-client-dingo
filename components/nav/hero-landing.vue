@@ -5,6 +5,8 @@ const mounted = ref(false);
 const canvas = ref<HTMLCanvasElement | null>(null);
 const circuitHero = shallowRef<CircuitHero | null>(null);
 const { width, height } = useWindowSize();
+const { isSerialSupported, getBrowserInstructions } = useBrowserCompat();
+const browserAlert = getBrowserInstructions();
 
 const heroProps = computed<CircuitHeroProps>(() => ({
   width: width.value,
@@ -46,11 +48,25 @@ watch([width, height, canvas], () => {
             <h1 class="text-h1 ml-n2">DuinoApp</h1>
             <p class="text-subtitle-1">Build your projects anywhere</p>
             <br>
-            <btn-primary class="my-6" to="/code" nuxt>
+            <btn-primary
+              class="my-6"
+              :to="isSerialSupported ? '/code' : null"
+              :disabled="!isSerialSupported"
+            >
               Start Coding
             </btn-primary>
             <v-alert class="d-lg-none" type="info">
               Please note that DuinoApp is not yet available for mobile/tablet devices.
+            </v-alert>
+            <br>
+            <v-alert
+              v-if="browserAlert"
+              type="warning"
+              class="d-none d-lg-inline-flex"
+            >
+              {{ browserAlert.message }}
+              <br>
+              {{ browserAlert.recommendation }}
             </v-alert>
           </v-col>
           <v-col cols="12" md="8" lg="6" xl="4" order="1" order-md="3" class="text-center">

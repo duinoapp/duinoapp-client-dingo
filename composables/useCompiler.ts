@@ -54,6 +54,7 @@ export const useCompiler = defineStore('compiler', () => {
     if (compiling.value) throw new Error('Already compiling.');
     if (!projects.storage) throw new Error('No storage adaptor found.');
     if (!checkCurrentServer()) throw new Error('Invalid server URL.');
+    await projects.waitForVolatileActions();
     const pathMap = await projects.storage.list('/', true) as PathMap;
     const inoFile = Object.keys(pathMap).find((k) => k.endsWith('.ino'));
     if (!inoFile) throw new Error('No .ino file found.');

@@ -49,8 +49,7 @@ export const useServers = defineStore('server', () => {
       serverUrls.value.unshift(url);
     }
     if (projects.settings?.compile?.serverUrl !== url) {
-      const compileSettings = projects.settings?.compile || {};
-      compileSettings.serverUrl = url;
+      const compileSettings = { ...(projects.settings?.compile || {}), serverUrl: url };
       await projects.updateSettings({ compile: compileSettings });
     }
     await asyncTimeout(100);

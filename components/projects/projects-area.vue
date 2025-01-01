@@ -10,9 +10,15 @@ const typeToText = (type: string) => {
   return projects.storageItems.find((item) => item.value === type)?.text || type;
 };
 
-const removeProject = () => {
+const projectList = computed(() => projects.projectItems);
+
+const handleLoadProject = async (id: string) => {
+  await projects.loadProject(id);
+};
+
+const handleRemoveProject = async () => {
   if (!removeProjectId.value) return;
-  projects.removeProject(removeProjectId.value);
+  await projects.removeProject(removeProjectId.value);
   removeProjectId.value = null;
 };
 
@@ -54,11 +60,11 @@ const removeProject = () => {
     </div>
     <v-list density="compact" class="transparent">
       <v-list-item
-        v-for="project in projects.projectItems"
+        v-for="project in projectList"
         :key="project.value"
         :active="project.disabled"
         :class="{ 'text-primary': project.disabled, 'project-list-item': true }"
-        @click="!project.disabled && projects.loadProject(project.value)"
+        @click="!project.disabled && handleLoadProject(project.value)"
       >
         <v-list-item-title>
           <v-tooltip location="bottom">
@@ -113,7 +119,7 @@ const removeProject = () => {
         <v-card-actions>
           <v-spacer />
           <v-btn @click="removeProjectId = null">Cancel</v-btn>
-          <btn-primary @click="removeProject">Remove</btn-primary>
+          <btn-primary @click="handleRemoveProject()">Remove</btn-primary>
         </v-card-actions>
       </v-card>
     </v-dialog>

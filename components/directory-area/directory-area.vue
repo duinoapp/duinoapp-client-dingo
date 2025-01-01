@@ -51,28 +51,27 @@ const fileItems = computed(() => {
 });
 
 const loadPathMap = async () => {
-  if (!currentStorage.value) return;
-  pathMap.value = await currentStorage.value.list('/', true);
+  if (!projects.storage) return;
+  pathMap.value = await projects.storage.list('/', true);
 };
 
 const handlePathChange = useDebounceFn(() => {
   loadPathMap();
 }, 500);
 
-const currentProjectId = computed(() => projects.currentProjectId);
-const currentStorage = ref(projects.storage);
-watch(currentProjectId, () => {
-  if (currentStorage.value) {
-    currentStorage.value.off?.('paths-changed', handlePathChange);
-  }
-  projects.storage?.on('paths-changed', handlePathChange);
-  currentStorage.value = projects.storage;
+onMounted(() => {
+  projects.on('paths-changed', handlePathChange);
   loadPathMap();
-}, { immediate: true });
+});
 
 onBeforeUnmount(() => {
-  currentStorage.value?.off('paths-changed', handlePathChange);
+  projects.off('paths-changed', handlePathChange);
 });
+
+const currentProjectId = computed(() => projects.currentProjectId);
+watch(currentProjectId, () => {
+  loadPathMap();
+}, { immediate: true });
 
 const currentTabId = computed(() => tabs.currentTab?.id || null);
 watch(currentTabId, () => {

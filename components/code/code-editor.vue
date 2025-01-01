@@ -33,6 +33,8 @@ const ready = computed(() => !!monacoRef.value);
 
 onUnmounted(() => !monacoRef.value && unload());
 
+// const model = computed(() => monacoRef.value?.editor.createModel(props.modelValue, props.language, props.path));
+
 // your action
 // function formatCode() {
 //   editorRef.value?.getAction('editor.action.formatDocument').run();

@@ -46,7 +46,7 @@
     "xterm-addon-fit": "^0.8.0"
   },
   "dependencies": {
-    "@duinoapp/files-multitool": "^0.0.4",
+    "@duinoapp/files-multitool": "^0.0.5",
     "@duinoapp/upload-multitool": "^0.0.3",
     "@pinia/nuxt": "^0.5.1",
     "@vuelidate/core": "^2.0.3",

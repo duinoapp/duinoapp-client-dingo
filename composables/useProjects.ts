@@ -1,344 +1,318 @@
 import { useLocalStorage } from '@vueuse/core';
-import FilesMultitool from '@duinoapp/files-multitool';
-import type { FilesMultitoolType, FilesMultitoolOptions, FileStat } from '@duinoapp/files-multitool';
+import FilesMultitool, { type FilesMultitoolType, type FilesMultitoolEvents } from '@duinoapp/files-multitool';
 import { defineStore } from 'pinia';
-import {
-  settingsPath,
-  saveProjectSettings,
-  parseProjectSettings,
-  getInoFileName,
-} from '@/utils/project-settings';
 import type { ProjectSettings } from '@/utils/project-settings';
+import { ProjectService, type ProjectRef } from '@/utils/project-service';
 import {
   starterTemplates,
-  importProject,
-  importProjectFromTemplate,
-  importProjectFromUrl
-} from '@/utils/import-project';
-import type { ExtractedProject } from '@/utils/import-project';
-import { camelCase } from 'change-case';
-
-// interface FilesMultitool extends FMT {};
-// const { FilesMultitool } = fmt;
-
-interface BasicProjectRef {
-  id: string
-  name: string
-  type: FilesMultitoolType
-  lastOpened?: number
-};
-  
-interface Project extends BasicProjectRef {
-  storage: FilesMultitool
-  settings: ProjectSettings
-  lastOpened: number
-};
+  createBlankProject,
+  importFromFile,
+  importFromTemplate,
+  importFromUrl,
+  genId,
+} from '@/utils/project-importer';
 
 type InitDialogType = 'import' | 'create' | 'open' | 'example' | 'library';
 
-const adaptorOptionsMap = {
-  'fsa-api': { db: 'duinoapp', startIn: 'documents' },
-  'indexed-db': { db: 'duinoapp' },
-  'memory': { db: 'duinoapp' },
-} as { [key: string]: FilesMultitoolOptions };
+type StorageEventType = keyof FilesMultitoolEvents;
+type StorageEventHandler<T extends StorageEventType> = FilesMultitoolEvents[T];
 
-const blankIno = `
-void setup() {
-  // put your setup code here, to run once:
+export const useProjects = defineStore('projects', () => {
+  const local = useLocalStorage('projects', {
+    projectRefs: [] as ProjectRef[],
+    currentProjectId: null as string | null,
+  }, {
+    mergeDefaults: true,
+  });
 
-}
+  const _currentProject = ref<ProjectService | null>(null);
+  const volatileActions = reactive(new Set<string>());
+  const dialog = reactive({
+    open: false,
+    type: '' as InitDialogType,
+    ref: '',
+    inoFileName: '',
+    onCancel: null as (() => void) | null,
+  });
 
-void loop() {
-  // put your main code here, to run repeatedly:
+  // Update event handlers to use the event map
+  const eventHandlers = shallowRef({} as { [K in StorageEventType]: Set<StorageEventHandler<K>> });
 
-}
-`;
+  // Computed properties
+  const currentProject = computed(() => _currentProject.value);
+  const currentProjectId = computed(() => _currentProject.value?.id ?? null);
+  const currentRef = computed(() => local.value.projectRefs.find((p) => p.id === local.value.currentProjectId));
+  const settings = computed(() => Object.freeze({ ...(_currentProject.value?.getSettings() ?? {}) }));
+  const storage = computed(() => _currentProject.value?.getStorage() ?? null);
+  const inoFileName = computed(() => _currentProject.value?.getInoFileName() ?? '');
+  const projectItems = computed(() => local.value.projectRefs
+    .toSorted((a, b) => (b.lastOpened ?? 0) - (a.lastOpened ?? 0))
+    .map((p) => ({
+      text: p.name,
+      value: p.id,
+      type: p.type,
+      disabled: p.id === currentProjectId.value,
+    })));
+  const isVolatile = computed(() => volatileActions.size > 0);
+  const storageItems = computed(() => ProjectService.getStorageTypes());
 
-const validateProjectDirectory = async (storage: FilesMultitool, isExisting?: boolean): Promise<string> => {
-  // const hasSettings = await storage.exists(settingsPath);
-  // const hasIno = await storage.exists(getInoFileName(projectName));
-  const rootFiles = await storage.list('/', false);
-  const inoFiles = Object.entries(rootFiles).filter(([f, stat]: [string, FileStat]) => f.endsWith('.ino') && stat.isFile);
-  if (inoFiles.length > 1) {
-    await storage.destroy();
-    throw new Error('Project directory contains multiple .ino files.');
-  }
-  const hasIno = inoFiles.length > 0;
-  if (!hasIno) {
-    if (isExisting) {
-      await storage.destroy();
-      throw new Error('Directory specified does not contain a ino file.');
+  // Volatile actions management
+  const addVolatileAction = (action: string) => volatileActions.add(action);
+  const removeVolatileAction = (action: string) => volatileActions.delete(action);
+  const waitForVolatileActions = async (): Promise<void> => {
+    if (!isVolatile.value) return;
+    return new Promise((resolve) => {
+      const interval = setInterval(() => {
+        if (!isVolatile.value) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 50);
+    });
+  };
+
+  // Project management
+  const setCurrentProject = async (project: ProjectService | null): Promise<void> => {
+    const oldProject = _currentProject.value;
+    
+    if (project) {
+      project.touch();
+      local.value.projectRefs = local.value.projectRefs
+        .filter(p => p.id !== project.id)
+        .concat(project.toRef());
+      local.value.currentProjectId = project.id;
+    } else {
+      local.value.currentProjectId = null;
     }
-    const rootFiles = await storage.list('/');
-    if (Object.keys(rootFiles).length > 0) {
-      await storage.destroy();
-      throw new Error('Project directory is not empty and does not contain a valid project.');
+    
+    _currentProject.value = project;
+
+    if (oldProject && oldProject !== project) {
+      await oldProject.destroy();
     }
-  }
-  return inoFiles[0]?.[0] ?? '';
-};
+  };
 
-const initialiseProject = async (project: BasicProjectRef, isExisting?: boolean): Promise<Project> => {
-  const adaptorOpts = { ...adaptorOptionsMap[project.type] };
-  if (project.type === 'indexed-db') {
-    adaptorOpts.db = `${adaptorOpts.db}-${camelCase(project.id)}`
-  }
-  const storage = new FilesMultitool(project.type, project.id, adaptorOpts);
-  await storage.init();
-  const inoFileName = await validateProjectDirectory(storage, isExisting);
-  const settings = await parseProjectSettings(storage, getProjectNameFromIno(inoFileName) || project.name);
-  project.name = settings.name;
-  if (!inoFileName) {
-    await storage.writeFile(getInoFileName(project.name), blankIno);
-  } else if (inoFileName.replace(/(^\/)/g, '') !== getInoFileName(project.name)) {
-    await storage.rename(inoFileName, getInoFileName(project.name));
-  }
-  return {
-    ...project,
-    name: settings.name,
-    storage,
-    settings,
-    lastOpened: Date.now(),
-  } as Project;
-};
+  const closeProject = async (project: ProjectService): Promise<void> => {
+    await waitForVolatileActions();
+    await project.destroy();
+    if (currentProjectId.value === project.id) {
+      await setCurrentProject(null);
+    }
+  };
 
-const genId = (): string => Math.random().toString(36).substring(2);
+  const loadProject = async (projectId: string): Promise<void> => {
+    await waitForVolatileActions();
+    const projectRef = local.value.projectRefs.find((p) => p.id === projectId);
+    if (!projectRef) throw new Error('Project not found');
 
-interface ProjectsLocalStore {
-  projectRefs: BasicProjectRef[]
-  currentProjectId: string | null
-}
+    const project = await ProjectService.initialize(projectRef, true);
+    await setCurrentProject(project);
+  };
 
-export const useProjects = defineStore('projects', {
-  state: () => ({
-    local: useLocalStorage('projects', {
-      projectRefs: [] as BasicProjectRef[],
-      currentProjectId: null,
-    } as ProjectsLocalStore, { mergeDefaults: true }),
-    _currentProject: null as Project | null,
-    volatileActions: new Set<string>(),
-    dialog: {
-      open: false,
-      type: '' as InitDialogType,
-      ref: '',
-      inoFileName: '',
-      onCancel: null as (() => void) | null,
-    },
-  }),
-  getters: {
-    currentProject(): Project | null {
-      return this._currentProject;
-    },
-    currentProjectId(): string | null {
-      return this._currentProject?.id ?? null;
-    },
-    settings(): ProjectSettings | null {
-      return this.currentProject?.settings ?? null;
-    },
-    storage(): FilesMultitool | null {
-      return this.currentProject?.storage ?? null;
-    },
-    inoFileName(): string | null {
-      return getInoFileName(this.currentProject?.name ?? '');
-    },
-    projectItems(): { text: string, value: string, disabled: boolean, type: FilesMultitoolType }[] {
-      return this.local.projectRefs
-        .toSorted((a, b) => b.lastOpened! - a.lastOpened!)
-        .map((p) => ({
-          text: p.name,
-          value: p.id,
-          type: p.type,
-          disabled: p.id === this.currentProjectId,
-        }));
-    },
-    isVolatile(): boolean {
-      return this.volatileActions.size > 0;
-    },
-    starterTemplates() {
-      return starterTemplates;
-    },
-    storageItems() {
-      return FilesMultitool.getTypes();
-    },
-  },
-  actions: {
-    addVolatileAction(action: string): void {
-      this.volatileActions.add(action);
-    },
-    removeVolatileAction(action: string): void {
-      this.volatileActions.delete(action);
-    },
-    waitForVolatileActions(): Promise<void> {
-      if (!this.isVolatile) return Promise.resolve();
-      return new Promise((resolve) => {
-        const interval = setInterval(() => {
-          if (!this.isVolatile) {
-            clearInterval(interval);
-            resolve();
-          }
-        }, 50);
-      });
-    },
-    async closeProject(project: Project): Promise<void> {
-      await this.waitForVolatileActions();
-      await project.storage.destroy();
-      if (this.currentProjectId === project.id) {
-        this.local.currentProjectId = null;
-        this._currentProject = null;
+  const removeProject = async (projectId: string): Promise<void> => {
+    if (projectId === currentProjectId.value) {
+      await setCurrentProject(null);
+    }
+    local.value.projectRefs = local.value.projectRefs.filter(p => p.id !== projectId);
+  };
+
+  const createProject = async (type: FilesMultitoolType, name: string): Promise<ProjectService> => {
+    await waitForVolatileActions();
+    const project = await createBlankProject(type, name);
+    await setCurrentProject(project);
+    return project;
+  };
+
+  const openProject = async (type: FilesMultitoolType): Promise<void> => {
+    if (type === 'memory' || type === 'indexed-db') {
+      throw new Error('Invalid storage type for opening project');
+    }
+
+    const projectRef = {
+      id: genId(),
+      name: '',  // Will be set from the ino file
+      type,
+    };
+
+    const project = await ProjectService.initialize(projectRef, true);
+    await setCurrentProject(project);
+  };
+
+  const init = async (noLoad: boolean = false): Promise<void> => {
+    if (!local.value.currentProjectId) return;
+
+    if (noLoad) {
+      setCurrentProject(null);
+      return;
+    }
+
+    try {
+      await loadProject(local.value.currentProjectId);
+    } catch (e) {
+      console.error('Failed to load last project:', e);
+      setCurrentProject(null);
+    }
+  };
+
+  const updateSettings = async (newSettings: Partial<ProjectSettings>): Promise<void> => {
+    if (!_currentProject.value) throw new Error('No current project');
+    const oldName = _currentProject.value.name;
+    
+    addVolatileAction('updateSettings');
+    try {
+      await _currentProject.value.updateSettings(newSettings);
+      if (newSettings.name && newSettings.name !== oldName) {
+        local.value.projectRefs = local.value.projectRefs.map(p =>
+          p.id === currentProjectId.value ? _currentProject.value!.toRef() : p
+        );
       }
-    },
-    async loadProject(projectId: string): Promise<void> {
-      await this.waitForVolatileActions();
-      const projectRef = this.local.projectRefs.find((p) => p.id === projectId);
-      if (!projectRef) {
-        throw new Error(`Project with id ${projectId} not found.`);
-      }
-      const oldCurrentProject = this._currentProject;
-      const project = await initialiseProject(projectRef, true);
-      projectRef.lastOpened = project.lastOpened;
-      this.local.currentProjectId = projectId;
-      this._currentProject = project;
-      if (oldCurrentProject) {
-        await this.closeProject(oldCurrentProject);
-      }
-    },
-    removeProject(projectId: string): void {
-      this.local.projectRefs = this.local.projectRefs.filter((p) => p.id !== projectId);
-      if (this.local.currentProjectId === projectId) {
-        this.local.currentProjectId = null;
-        this._currentProject = null;
-      }
-    },
-    async renameProject(name: string): Promise<void> {
-      if (!this._currentProject) {
-        throw new Error('No current project.');
-      }
-      await this.updateSettings({ name });
-    },
-    async createProject(type: FilesMultitoolType, name: string): Promise<Project> {
-      await this.waitForVolatileActions();
-      const id = genId();
-      const projectRef = { id, name, type } as BasicProjectRef;
-      const oldCurrentProject = this._currentProject;
-      const project = await initialiseProject(projectRef);
-      projectRef.lastOpened = project.lastOpened;
-      this.local.projectRefs.push(projectRef);
-      this.local.currentProjectId = id;
-      this._currentProject = project;
-      if (oldCurrentProject) {
-        await this.closeProject(oldCurrentProject);
-      }
-      return project;
-    },
-    async openProject(type: FilesMultitoolType): Promise<Project> {
-      const id = genId();
-      const projectRef = { id, name: '', type } as BasicProjectRef;
-      const project = await initialiseProject(projectRef, true);
-      projectRef.lastOpened = project.lastOpened;
-      const oldCurrentProject = this._currentProject;
-      this.local.projectRefs.push(projectRef);
-      this.local.currentProjectId = id;
-      this._currentProject = project;
-      if (oldCurrentProject) {
-        await this.closeProject(oldCurrentProject);
-      }
-      return project;
-    },
-    async init(noLoad?: boolean): Promise<void> {
-      if (!this.local.currentProjectId) return;
-      const projectRef = this.local.projectRefs.find((p) => p.id === this.local.currentProjectId);
-      this.local.currentProjectId = null;
-      if (!projectRef || noLoad) {
-        return;
-      }
-      setTimeout(() => {
-        this.loadProject(projectRef.id);
-      }, 100);
-    },
-    async updateSettings(settings: Partial<ProjectSettings>): Promise<void> {
-      if (!this._currentProject) {
-        throw new Error('No current project.');
-      }
-      const projectRef = this.local.projectRefs.find((p) => p.id === this.currentProjectId);
-      if (!projectRef) {
-        throw new Error('No project ref found.');
-      }
-      const oldName = this._currentProject.name;
-      const mergedSettings = { ...this._currentProject.settings, ...settings };
-      this.addVolatileAction('updateSettings');
-      if (oldName !== mergedSettings.name) {
-        const inoStat = await this._currentProject.storage.stat(getInoFileName(oldName));
-        if (inoStat) {
-          await this._currentProject.storage.rename(
-            getInoFileName(oldName),
-            getInoFileName(mergedSettings.name)
-          );
+    } finally {
+      removeVolatileAction('updateSettings');
+    }
+  };
+
+  const renameProject = async (newName: string): Promise<void> => {
+    if (newName === currentProject.value?.name) return;
+    await updateSettings({ name: newName });
+  };
+
+  // Import methods
+  const importProject = async (type: FilesMultitoolType, file: File, name?: string): Promise<ProjectService> => {
+    const project = await importFromFile(type, file, name);
+    await setCurrentProject(project);
+    return project;
+  };
+
+  const projectFromTemplate = async (type: FilesMultitoolType, template: string, name?: string): Promise<ProjectService> => {
+    const project = await importFromTemplate(type, template, name);
+    await setCurrentProject(project);
+    return project;
+  };
+
+  const projectFromUrl = async (type: FilesMultitoolType, url: string, name?: string): Promise<ProjectService> => {
+    const project = await importFromUrl(type, url, name);
+    await setCurrentProject(project);
+    return project;
+  };
+
+  const importLibraryProject = async (type: FilesMultitoolType, ref: string, inoFileName: string, name?: string): Promise<ProjectService> => {
+    const { getLibrary } = useLibraries();
+    const library = await getLibrary(ref);
+    if (!library?.resources?.url) throw new Error('Library not found.');
+    const projectSettings = {
+      ...(name ? { name } : {}),
+      libraries: [ref],
+      board: settings.value?.board,
+      compile: settings.value?.compile,
+      monitor: settings.value?.monitor,
+    };
+    const project = await importFromUrl(type, library?.resources?.url, name, inoFileName);
+    project.updateSettings(projectSettings);
+    await setCurrentProject(project);
+    return project;
+  };
+
+  const initDialog = (
+    type: InitDialogType,
+    { ref, inoFileName, onCancel }: { ref?: string, inoFileName?: string, onCancel?: () => void } = {}
+  ): void => {
+    dialog.open = true;
+    dialog.type = type;
+    dialog.ref = ref ?? '';
+    dialog.inoFileName = inoFileName ?? '';
+    dialog.onCancel = onCancel ?? null;
+  };
+
+  // Update handler management methods to use generics
+  const on = <T extends StorageEventType>(event: T, handler: StorageEventHandler<T>): void => {
+    if (!eventHandlers.value[event]) {
+      eventHandlers.value[event] = new Set() as typeof eventHandlers.value[T];
+    }
+    const handlers = eventHandlers.value[event];
+    handlers.add(handler);
+    // If there's an active storage, immediately attach the handler
+    storage.value?.on?.(event, handler);
+  };
+
+  const off = <T extends StorageEventType>(event: T, handler: FilesMultitoolEvents[T]): void => {
+    const handlers = eventHandlers.value[event];
+    handlers?.delete(handler);
+    // If there's an active storage, remove the handler
+    storage.value?.off?.(event, handler);
+  };
+
+  // Update watcher to handle type safety
+  watch(() => storage.value, (newStorage, oldStorage) => {
+    if (oldStorage) {
+      // Remove all handlers from old storage
+      for (const e in eventHandlers.value) {
+        const event = e as StorageEventType;
+        const handlers = eventHandlers.value[event];
+        for (const handler of handlers) {
+          oldStorage.off?.(event, handler);
         }
       }
-      await saveProjectSettings(this._currentProject.storage, mergedSettings);
-      this._currentProject.settings = mergedSettings;
-      this._currentProject.name = mergedSettings.name;
-      projectRef.name = mergedSettings.name;
-      this.removeVolatileAction('updateSettings');
-    },
-    async openExtractedProject(type: FilesMultitoolType, extracted: ExtractedProject, settings?: Partial<ProjectSettings>): Promise<Project> {
-      const id = genId();
-      const projectRef = { id, name: extracted.settings.name, type } as BasicProjectRef;
-      const project = await initialiseProject(projectRef, false);
-      projectRef.lastOpened = project.lastOpened;
-      const oldCurrentProject = this._currentProject;
-      this.local.projectRefs.push(projectRef);
-      this.local.currentProjectId = id;
-      this._currentProject = project;
-      if (oldCurrentProject) {
-        await this.closeProject(oldCurrentProject);
-      }
-      await Promise.all(extracted.files.map(async (f): Promise<void> => {
-        if (f.path === settingsPath) return;
-        const path = f.path.endsWith('.ino') ? getInoFileName(projectRef.name) : f.path;
-        await project.storage.writeFile(path, await f.file.arrayBuffer());
-      }));
-      Object.assign(extracted.settings, settings || {});
-      await this.updateSettings(extracted.settings);
-      return project;
-    },
-    async projectFromTemplate(type: FilesMultitoolType, template: string, name?: string): Promise<Project> {
-      const extracted = await importProjectFromTemplate(template);
-      return this.openExtractedProject(type, extracted, { name });
-    },
-    async projectFromUrl(type: FilesMultitoolType, url: string, name?: string): Promise<Project> {
-      const extracted = await importProjectFromUrl(url);
-      return this.openExtractedProject(type, extracted, { name });
-    },
-    async importProject(type: FilesMultitoolType, file: File, name?: string): Promise<Project> {
-      const extracted = await importProject(file);
-      return this.openExtractedProject(type, extracted, { name });
-    },
-    async importLibraryProject(type: FilesMultitoolType, ref: string, inoFileName: string, name?: string): Promise<Project> {
-      const { getLibrary } = useLibraries();
-      const library = await getLibrary(ref);
-      const settings = {
-        name,
-        libraries: [ref],
-        board: this.settings?.board,
-        compile: this.settings?.compile,
-        monitor: this.settings?.monitor,
-      };
-      if (!library?.resources?.url) throw new Error('Library not found.');
-      const extracted = await importProjectFromUrl(library?.resources?.url, inoFileName);
-      return this.openExtractedProject(type, extracted, settings);
-    },
-    initDialog(
-      type: InitDialogType,
-      { ref, inoFileName, onCancel }: { ref?: string, inoFileName?: string, onCancel?: () => void } = {}
-    ): void {
-      this.dialog.open = true;
-      this.dialog.type = type;
-      this.dialog.ref = ref ?? '';
-      this.dialog.inoFileName = inoFileName ?? '';
-      this.dialog.onCancel = onCancel ?? null;
     }
-  },
+    if (newStorage) {
+      // Add all handlers to new storage
+      for (const e in eventHandlers.value) {
+        const event = e as StorageEventType;
+        const handlers = eventHandlers.value[event];
+        for (const handler of handlers) {
+          newStorage.on?.(event, handler);
+        }
+      }
+    }
+  });
+
+  // Update cleanup to handle type safety
+  onUnmounted(() => {
+    const currentStorage = storage.value;
+    if (currentStorage) {
+      for (const e in eventHandlers.value) {
+        const event = e as StorageEventType;
+        const handlers = eventHandlers.value[event];
+        for (const handler of handlers) {
+          currentStorage.off?.(event, handler);
+        }
+      }
+    }
+  });
+
+  return {
+    local,
+    _currentProject,
+    volatileActions,
+    dialog,
+    currentProject,
+    currentProjectId,
+    currentRef,
+    settings,
+    storage,
+    inoFileName,
+    projectItems,
+    isVolatile,
+    starterTemplates,
+    storageItems,
+    addVolatileAction,
+    removeVolatileAction,
+    waitForVolatileActions,
+    closeProject,
+    loadProject,
+    removeProject,
+    createProject,
+    openProject,
+    init,
+    updateSettings,
+    renameProject,
+    projectFromTemplate,
+    projectFromUrl,
+    importProject,
+    importLibraryProject,
+    initDialog,
+    on,
+    off,
+  };
 });
 
 if (import.meta.hot) {

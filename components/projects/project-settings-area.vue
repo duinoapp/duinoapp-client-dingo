@@ -19,8 +19,8 @@ watchDebounced([projectAuthor], () => {
 
 watch(() => projects.currentProjectId, (value) => {
   if (!value) return;
-  projectName.value = projects.currentProject?.name ?? '';
-  projectAuthor.value = projects.currentProject?.settings?.author ?? '';
+  projectName.value = projects.settings?.name ?? '';
+  projectAuthor.value = projects.settings?.author ?? '';
 }, { immediate: true });
 
 </script>

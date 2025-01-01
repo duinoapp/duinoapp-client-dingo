@@ -1,4 +1,3 @@
-import { set } from '@vueuse/core';
 import { defineStore } from 'pinia';
 import type { FilesMultitoolChangeEvent } from '@duinoapp/files-multitool';
 
@@ -30,7 +29,7 @@ export const useTabs = defineStore('tabs', () => {
   const tabs = useLocalStorage('tabs', [] as ProjectTab[], { mergeDefaults: true });
 
   const projectTabs = computed((): ProjectTab[] => {
-    const currentProjectId = projects.currentProject?.id;
+    const currentProjectId = projects.currentProjectId;
     if (!currentProjectId) return [{
       id: 'welcome',
       projectId: null,
@@ -79,7 +78,7 @@ export const useTabs = defineStore('tabs', () => {
   };
 
   const addTab = async (tab: NewProjectTab): Promise<void> => {
-    const currentProjectId = projects.currentProject?.id;
+    const currentProjectId = projects.currentProjectId;
     if (!tab.projectId && !currentProjectId) throw new Error('No project selected.');
     if (tab.type === 'file' && !tab.path) throw new Error('No path provided.');
     if (tab.type === 'welcome') throw new Error('Cannot add welcome tab.');
@@ -107,7 +106,7 @@ export const useTabs = defineStore('tabs', () => {
     if (existingTab) {
       return selectTab(existingTab);
     }
-    const currentProjectId = projects.currentProject?.id;
+    const currentProjectId = projects.currentProjectId;
     if (!currentProjectId) throw new Error('No project selected.');
     const exists = await projects.storage?.exists(path);
     if (!exists) throw new Error(`File ${path} does not exist.`);
@@ -142,12 +141,8 @@ export const useTabs = defineStore('tabs', () => {
     }
   };
 
-  const currentStorage = ref(projects.storage);
   watch(() => projects.currentProjectId, (value) => {
     if (!value) return;
-    if (currentStorage.value) currentStorage.value.off?.('file-changed', fileChangeHandler);
-    currentStorage.value = projects.storage;
-    currentStorage.value?.on?.('file-changed', fileChangeHandler);
     setTimeout(async (): Promise<void> => {
       try {
         if (projects.inoFileName) await openFileTab(projects.inoFileName);
@@ -155,8 +150,12 @@ export const useTabs = defineStore('tabs', () => {
     }, 100);
   }, { immediate: true });
 
+  onMounted(() => {
+    projects.on('file-changed', fileChangeHandler);
+  });
+
   onBeforeUnmount(() => {
-    if (currentStorage.value) currentStorage.value.off?.('file-changed', fileChangeHandler);
+    projects.off('file-changed', fileChangeHandler);
   });
 
   return {

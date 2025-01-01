@@ -66,7 +66,7 @@ const submit = async () => {
         loading.value = false;
         return;
       }
-      await projects.importProject(storageType.value, projectFile.value);
+      await projects.importProject(storageType.value, projectFile.value, projectName.value);
     } else if (projects.dialog.type === 'example') {
       await projects.projectFromTemplate(storageType.value, projects.dialog.ref, projectName.value);
     } else if (projects.dialog.type === 'library') {

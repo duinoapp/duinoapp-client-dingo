@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getProjectInoFilesFromUrl } from '@/utils/import-project';
+import { getInoFilesFromUrl } from '@/utils/project-importer';
 
 const props = withDefaults(defineProps<{
   library?: Library,
@@ -11,6 +11,7 @@ const { initDialog } = useProjects();
 
 const fileNames = ref<string[]>([]);
 const loading = ref(false);
+const errored = ref(false);
 const libUrl = computed(() => props.library?.resources?.url);
 
 const emit = defineEmits(['close']);
@@ -26,8 +27,13 @@ const openLibraryExample = (fileName: string) => {
 const loadFiles = async () => {
   if (!libUrl.value) return;
   loading.value = true;
-  fileNames.value = await getProjectInoFilesFromUrl(libUrl.value);
-  loading.value = false;
+  try {
+    fileNames.value = await getInoFilesFromUrl(libUrl.value);
+  } catch (e) {
+    errored.value = true;
+  } finally {
+    loading.value = false;
+  }
 };
 
 watch(libUrl, loadFiles, { immediate: true });
@@ -40,7 +46,16 @@ watch(libUrl, loadFiles, { immediate: true });
     indeterminate
     color="primary"
   />
-  <v-list>
+  <v-alert
+    v-if="errored"
+    type="error"
+    variant="tonal"
+    text="Failed to load examples. Please try again later."
+  />
+  <div v-else-if="!fileNames.length && !loading" class="text-center text-caption">
+    No examples found for this library.
+  </div>
+  <v-list v-else-if="!loading">
     <v-list-item
       v-for="fileName in fileNames"
       :key="fileName"
@@ -51,7 +66,4 @@ watch(libUrl, loadFiles, { immediate: true });
       </v-list-item-title>
     </v-list-item>
   </v-list>
-  <div v-if="!fileNames.length && !loading" class="text-center text-caption">
-    No examples found for this library.
-  </div>
 </template>

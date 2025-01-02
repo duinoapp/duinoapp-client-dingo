@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useTheme } from 'vuetify';
-import { useEditorModels, getUriString } from '@/composables/useEditorModels';
+import { useEditorModels } from '@/composables/useEditorModels';
 import CodeEditor from '@/components/code/code-editor.vue';
 
 const tabs = useTabs();
@@ -30,7 +30,7 @@ watch([
   const model = await editorModels.getModel(projectId, path, true);
   if (model) {
     // Only set URI after model is loaded
-    currentUri.value = getUriString(projectId, path);
+    currentUri.value = editorModels.getUriString(projectId, path);
 
     setTimeout(() => {
       if (range) {

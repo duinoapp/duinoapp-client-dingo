@@ -1,24 +1,9 @@
 import { defineStore } from 'pinia';
-import type { editor } from 'monaco-editor';
-import { Uri } from 'monaco-editor';
+import type { editor, Uri } from 'monaco-editor/esm/vs/editor/editor.api';
 import { useMonaco } from '@guolao/vue-monaco-editor';
 import { watchDebounced } from '@vueuse/core';
 import { getContentTypeFromFileName, getLanguageFromContentType } from '@/components/code/code-utils';
 import type { FilesMultitoolChangeEvent, FileStat } from '@duinoapp/files-multitool';
-
-// Helper to get URI for a project file
-export const getUri = (projectId: string, path: string): Uri => {
-  return Uri.from({
-    scheme: 'file',
-    authority: projectId,
-    path: `/${path.replace(/^\//, '')}`,
-  });
-};
-
-// Helper to get URI string
-export const getUriString = (projectId: string, path: string): string => {
-  return getUri(projectId, path).toString();
-};
 
 const defaultSearchOptions = {
   isRegex: false,
@@ -61,6 +46,20 @@ export const useEditorModels = defineStore('editorModels', () => {
   // Buffer for pending saves
   const pendingSaves = ref(new Set<string>());
 
+  // Helper to get URI for a project file
+  const getUri = (projectId: string, path: string): Uri => {
+    return monacoRef.value!.Uri.from({
+      scheme: 'file',
+      authority: projectId,
+      path: `/${path.replace(/^\//, '')}`,
+    });
+  };
+
+  // Helper to get URI string
+  const getUriString = (projectId: string, path: string): string => {
+    return getUri(projectId, path).toString();
+  };
+
   // Watch pending saves and handle file writes
   watchDebounced(pendingSaves, async (saves) => {
     if (!saves.size) return;
@@ -74,7 +73,7 @@ export const useEditorModels = defineStore('editorModels', () => {
         const model = models.value.get(uriStr);
         if (!model) return;
 
-        const uri = Uri.parse(uriStr);
+        const uri = monacoRef.value!.Uri.parse(uriStr);
         const path = uri.path.slice(1); // Remove leading slash
         
         await projects.storage?.writeFile(path, model.getValue());
@@ -275,7 +274,7 @@ export const useEditorModels = defineStore('editorModels', () => {
     let fileCount = 0;
     for (const uri of Array.from(models.value.keys()).sort()) {
       if (!uri.startsWith(`file://${projectId}/`)) continue;
-      const uriObj = Uri.parse(uri);
+      const uriObj = monacoRef.value!.Uri.parse(uri);
       const path = uriObj.path.slice(1);
       if (opts.hint.length && !opts.hint.includes(path)) continue;
       const results = searchModel(projectId, path, query, options);
@@ -334,6 +333,8 @@ export const useEditorModels = defineStore('editorModels', () => {
     loading,
     searching,
     error,
+    getUri,
+    getUriString,
     getModel,
     getModelByUri,
     disposeModel,

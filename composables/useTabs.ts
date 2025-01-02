@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import type { FilesMultitoolChangeEvent } from '@duinoapp/files-multitool';
-import type { IRange } from 'monaco-editor';
+import type { IRange } from 'monaco-editor/esm/vs/editor/editor.api';
 
 export type TabType = 'file' | 'welcome' | 'settings' | 'start-project' | 'invaders' | 'boards' | 'libraries' | 'project-settings';
 

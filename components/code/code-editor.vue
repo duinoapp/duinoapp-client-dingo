@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useMonaco } from '@guolao/vue-monaco-editor';
-import { type editor, Uri } from 'monaco-editor';
+import { type editor } from 'monaco-editor/esm/vs/editor/editor.api';
 import type { EditorOptions } from './code';
 import { useEditorModels } from '@/composables/useEditorModels';
 
@@ -28,12 +28,12 @@ const editorRef = shallowRef<editor.IStandaloneCodeEditor>();
 const searchCollection = shallowRef<editor.IEditorDecorationsCollection>();
 
 const setSearchDecorators = (uri: string) => {
-  if (!searchCollection.value) return;
+  if (!searchCollection.value || !monacoRef.value) return;
   if (!search.searchQuery) {
     searchCollection.value.clear();
     return;
   }
-  const { authority, path } = Uri.parse(uri);
+  const { authority, path } = monacoRef.value.Uri.parse(uri);
   const results = editorModels.searchModel(
     authority,
     path,

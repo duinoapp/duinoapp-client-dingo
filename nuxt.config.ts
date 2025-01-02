@@ -11,53 +11,64 @@ export default defineNuxtConfig({
       },
     },
   },
+
   modules: [
     '@pinia/nuxt',
     '@vite-pwa/nuxt',
     '@vueuse/nuxt',
   ],
+
   typescript: {
     strict: true
   },
+
   css: [
     'vuetify/styles',
     '@mdi/font/css/materialdesignicons.min.css',
     '~/assets/global.scss'
   ],
+
   build: {
     transpile: ['vuetify'],
   },
+
   vite: {
     define: {
       'process.env.DEBUG': false,
     },
   },
+
   components: [
     {
       path: '~/components',
       pathPrefix: false,
     },
   ],
+
   imports: {
     dirs: ['./stores'],
   },
+
   routeRules: {
     '/': { prerender: true },
     '/**': { prerender: true },
     '/code/': { ssr: false },
     '/code/**': { ssr: false },
   },
+
   nitro: {
     preset: 'cloudflare_pages',
     prerender: {
       crawlLinks: true,
     },
   },
+
   runtimeConfig: {
     public: {
       version,
     },
   },
+
   pwa: {
     registerType: 'autoUpdate',
     manifest: {
@@ -89,6 +100,7 @@ export default defineNuxtConfig({
       ],
     },
   },
+
   app: {
     head: {
       title: 'DuinoApp',
@@ -110,4 +122,6 @@ export default defineNuxtConfig({
       ],
     },
   },
+
+  compatibilityDate: '2025-01-02',
 });

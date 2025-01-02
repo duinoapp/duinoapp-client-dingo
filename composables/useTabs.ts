@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import type { FilesMultitoolChangeEvent } from '@duinoapp/files-multitool';
+import type { IRange } from 'monaco-editor';
 
 export type TabType = 'file' | 'welcome' | 'settings' | 'start-project' | 'invaders' | 'boards' | 'libraries' | 'project-settings';
 
@@ -9,6 +10,7 @@ export interface ProjectTab {
   name: string
   type: TabType
   path?: string
+  range?: IRange
   isCurrent: boolean
   isTemporary?: boolean
 }
@@ -56,9 +58,10 @@ export const useTabs = defineStore('tabs', () => {
     return projectTabs.value.find((t) => t.isCurrent) ?? null;
   });
 
-  const selectTab = (tab: ProjectTab): void => {
+  const selectTab = (tab: ProjectTab, newTabData: Partial<ProjectTab> = {}): void => {
     const newTabs = tabs.value.map((t) => (t.projectId === tab.projectId ? reactive({
       ...t,
+      ...newTabData,
       isCurrent: t.id === tab.id,
     }) : t));
     tabs.value = newTabs;
@@ -88,7 +91,7 @@ export const useTabs = defineStore('tabs', () => {
     }
     const existingTab = findTab(tab.type, tab.path);
     if (existingTab) {
-      return selectTab(existingTab);
+      return selectTab(existingTab, { range: tab.range });
     }
     const newTab: ProjectTab = {
       id: genId(),
@@ -98,13 +101,13 @@ export const useTabs = defineStore('tabs', () => {
       ...tab,
     };
     tabs.value.push(reactive(newTab));
-    selectTab(newTab);
+    selectTab(newTab, { range: tab.range });
   };
 
-  const openFileTab = async (path: string): Promise<void> => {
+  const openFileTab = async (path: string, range?: IRange): Promise<void> => {
     const existingTab = findTab('file', path);
     if (existingTab) {
-      return selectTab(existingTab);
+      return selectTab(existingTab, { range });
     }
     const currentProjectId = projects.currentProjectId;
     if (!currentProjectId) throw new Error('No project selected.');
@@ -115,6 +118,7 @@ export const useTabs = defineStore('tabs', () => {
       name: path.split('/').pop() ?? path,
       path,
       projectId: currentProjectId,
+      range,
     });
   };
 
@@ -126,6 +130,12 @@ export const useTabs = defineStore('tabs', () => {
     }
     const newTabs = tabs.value.filter((t) => t.id !== tab.id);
     tabs.value = newTabs;
+  };
+
+  const clearRange = (tab: ProjectTab): void => {
+    if (tab.range) {
+      tab.range = undefined;
+    }
   };
 
   const fileChangeHandler = (_: string, change: FilesMultitoolChangeEvent): void => {
@@ -168,6 +178,7 @@ export const useTabs = defineStore('tabs', () => {
     addTab,
     openFileTab,
     closeTab,
+    clearRange,
   };
 });
 

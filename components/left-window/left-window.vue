@@ -36,3 +36,12 @@ watch(panelState, () => {
     />
   </div>
 </template>
+
+<style scoped lang="scss">
+.left-window {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: auto;
+}
+</style>

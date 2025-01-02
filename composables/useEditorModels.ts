@@ -11,7 +11,7 @@ export const getUri = (projectId: string, path: string): Uri => {
   return Uri.from({
     scheme: 'file',
     authority: projectId,
-    path: `/${path}`,
+    path: `/${path.replace(/^\//, '')}`,
   });
 };
 
@@ -23,9 +23,15 @@ export const getUriString = (projectId: string, path: string): string => {
 const defaultSearchOptions = {
   isRegex: false,
   matchCase: false,
-  wordSeparators: '~!@#$%^&*()=+[{]}|;:,.<>?/',
+  wordSeparators: null as string | null,
   captureMatches: false,
   limitResultCount: 100,
+  captureLines: true,
+};
+
+const defaultProjectSearchOptions = {
+  limit: 20 * 1000,
+  hint: [] as string[],
 };
 
 export type SearchOptions = Partial<typeof defaultSearchOptions>;
@@ -36,6 +42,7 @@ export type SearchResult = {
   lines: string[];
   // allLines: string[];
 };
+export type ProjectSearchOptions = Partial<typeof defaultProjectSearchOptions>;
 export type ProjectSearchResult = Record<string, SearchResult[]>;
 
 export const useEditorModels = defineStore('editorModels', () => {
@@ -98,10 +105,14 @@ export const useEditorModels = defineStore('editorModels', () => {
     const uriStr = getUriString(projectId, path);
     if (models.value.has(uriStr)) {
       const model = models.value.get(uriStr)!;
-      if (forceContent) {
-        await loadModelContent(projectId, path);
+      if (model.isDisposed()) {
+        models.value.delete(uriStr);
+      } else {
+        if (forceContent) {
+          await loadModelContent(projectId, path);
+        }
+        return model;
       }
-      return model;
     }
 
     loading.value = true;
@@ -236,7 +247,7 @@ export const useEditorModels = defineStore('editorModels', () => {
       opts.limitResultCount,
     );
     if (!results?.length) return [];
-    const allLines = model.getLinesContent();
+    const allLines = opts.captureLines ? model.getLinesContent() : [];
     return results.map((result) => {
       const lines = allLines.slice(result.range.startLineNumber - 1, result.range.endLineNumber);
       return {
@@ -249,7 +260,12 @@ export const useEditorModels = defineStore('editorModels', () => {
     });
   };
 
-  const searchProject = async (query: string, options: SearchOptions = defaultSearchOptions, limit: number = 20000) => {
+  const searchProject = async (
+    query: string,
+    options: SearchOptions = defaultSearchOptions,
+    projectSearchOptions: ProjectSearchOptions = defaultProjectSearchOptions,
+  ) => {
+    const opts = { ...defaultProjectSearchOptions, ...projectSearchOptions };
     const projectId = projects.currentProjectId;
     if (!projectId) return {};
     searching.value = true;
@@ -261,11 +277,12 @@ export const useEditorModels = defineStore('editorModels', () => {
       if (!uri.startsWith(`file://${projectId}/`)) continue;
       const uriObj = Uri.parse(uri);
       const path = uriObj.path.slice(1);
+      if (opts.hint.length && !opts.hint.includes(path)) continue;
       const results = searchModel(projectId, path, query, options);
       if (results?.length) {
         response[path] = results;
         count += results.length;
-        if (count >= limit) break;
+        if (count >= opts.limit) break;
       }
       fileCount += 1;
       // every 20 files, timeout for 10ms to avoid blocking the main thread
@@ -290,7 +307,19 @@ export const useEditorModels = defineStore('editorModels', () => {
         }
       }
     }
-  });
+
+    // initialise existing models in the editor
+    if (newId && monacoRef.value) {
+      const allModels = monacoRef.value?.editor?.getModels() ?? [];
+      for (const model of allModels) {
+        if (model.isDisposed()) continue;
+        const uri = model.uri.toString();
+        if (uri.startsWith(`file://${newId}/`)) {
+          models.value.set(uri, model);
+        }
+      }
+    }
+  }, { immediate: true });
 
   // Setup file change handler
   onMounted(() => {

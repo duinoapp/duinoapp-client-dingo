@@ -18,10 +18,10 @@ watch(panelState, () => {
       v-if="initialisedAreas.includes('explore')"
       v-show="panelState.leftPanelType === 'explore'"
     />
-    <!-- <search-area
+    <search-area
       v-if="initialisedAreas.includes('search')"
       v-show="panelState.leftPanelType === 'search'"
-    /> -->
+    />
     <servers-area
       v-if="initialisedAreas.includes('servers')"
       v-show="panelState.leftPanelType === 'servers'"

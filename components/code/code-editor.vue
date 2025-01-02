@@ -1,17 +1,15 @@
 <script lang="ts" setup>
 import { useMonaco } from '@guolao/vue-monaco-editor';
+import type { editor } from 'monaco-editor';
 import type { EditorOptions } from './code';
+import { useEditorModels } from '@/composables/useEditorModels';
 
-withDefaults(defineProps<{
-  modelValue: string,
+const props = withDefaults(defineProps<{
+  uri?: string | null,
   theme?: string,
-  language: string,
-  path?: string,
   options?: EditorOptions,
 }>(), {
-  modelValue: '',
-  language: 'cpp',
-  path: '',
+  uri: null,
   theme: 'vs-dark',
   options: () => ({
     automaticLayout: true,
@@ -20,36 +18,67 @@ withDefaults(defineProps<{
   }),
 });
 
-defineEmits(['update:modelValue']);
-
-const editorRef = shallowRef();
+const editorRef = shallowRef<editor.IStandaloneCodeEditor>();
 const { monacoRef, unload } = useMonaco();
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const handleMount = (editor: any) => {
-  editorRef.value = editor;
+const editorModels = useEditorModels();
+
+// Helper functions to manage editor state
+const saveEditorState = (uri: string) => {
+  if (!editorRef.value) return;
+  const state = editorRef.value.saveViewState();
+  editorModels.saveViewState(uri, state);
 };
 
+const setEditorModel = (uri: string) => {
+  if (!editorRef.value) return;
+  const model = editorModels.getModelByUri(uri);
+  if (!model) return;
+
+  editorRef.value.setModel(model);
+  const state = editorModels.getViewState(uri);
+  if (state) {
+    editorRef.value.restoreViewState(state);
+  }
+};
+
+// Event handlers
+const handleMount = (editor: editor.IStandaloneCodeEditor) => {
+  if (editorRef.value) return;
+  editorRef.value = editor;
+  if (props.uri) {
+    setEditorModel(props.uri);
+  }
+};
+
+// Computed
 const ready = computed(() => !!monacoRef.value);
 
-onUnmounted(() => !monacoRef.value && unload());
+// Watchers
+watch(() => props.uri, (newUri, oldUri) => {
+  if (!editorRef.value) return;
 
-// const model = computed(() => monacoRef.value?.editor.createModel(props.modelValue, props.language, props.path));
+  if (oldUri) {
+    saveEditorState(oldUri);
+  }
+  if (newUri) {
+    setEditorModel(newUri);
+  }
+});
 
-// your action
-// function formatCode() {
-//   editorRef.value?.getAction('editor.action.formatDocument').run();
-// }
+// Lifecycle
+onBeforeUnmount(() => {
+  if (props.uri) {
+    saveEditorState(props.uri);
+  }
+  if (!monacoRef.value) unload();
+});
 </script>
 
 <template>
   <vue-monaco-editor
     v-if="ready"
-    :value="modelValue"
     :theme="theme"
     :options="options"
-    :language="language"
-    :path="path"
     @mount="handleMount"
-    @update:value="$emit('update:modelValue', $event)"
   />
 </template>

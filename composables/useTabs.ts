@@ -168,6 +168,14 @@ export const useTabs = defineStore('tabs', () => {
     projects.off('file-changed', fileChangeHandler);
   });
 
+  const updateTabsOrder = (newTabs: ProjectTab[]): void => {
+    const currentProjectId = projects.currentProjectId;
+    if (!currentProjectId) return;
+    
+    const otherTabs = tabs.value.filter(t => t.projectId !== currentProjectId);
+    tabs.value = [...otherTabs, ...newTabs];
+  };
+
   return {
     tabs,
     projectTabs,
@@ -179,6 +187,7 @@ export const useTabs = defineStore('tabs', () => {
     openFileTab,
     closeTab,
     clearRange,
+    updateTabsOrder,
   };
 });
 

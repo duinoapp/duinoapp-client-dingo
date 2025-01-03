@@ -25,6 +25,8 @@ const { public: { version } } = useRuntimeConfig();
       <slot />
       <project-continue-dialog />
       <compatibility-dialog />
+      <file-action-dialogs />
+      <context-menu />
     </v-main>
     <!-- <v-footer class="d-flex" dense app>
       <div>

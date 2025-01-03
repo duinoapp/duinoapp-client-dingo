@@ -1,5 +1,6 @@
 <script setup lang="ts">
 
+const projects = useProjects();
 const { panelState } = usePanels();
 const tabs = useTabs();
 
@@ -8,6 +9,7 @@ interface MenuItem {
   icon: string;
   action?: () => void;
   isActive?: boolean;
+  disabled?: boolean;
 }
 
 const menuItems = computed<MenuItem[]>(() => [
@@ -22,6 +24,7 @@ const menuItems = computed<MenuItem[]>(() => [
     icon: 'mdi-magnify',
     action: () => panelState.leftPanelType = 'search',
     isActive: panelState.leftPanelType === 'search',
+    disabled: !projects.currentProjectId,
   },
   {
     name: 'Projects',
@@ -40,18 +43,21 @@ const menuItems = computed<MenuItem[]>(() => [
     icon: 'mdi-memory',
     action: () => tabs.addTab({ type: 'boards', name: 'Boards' }),
     isActive: tabs.currentTab?.type === 'boards',
+    disabled: !projects.currentProjectId,
   },
   {
     name: 'Libraries',
     icon: 'mdi-book-open-variant',
     action: () => tabs.addTab({ type: 'libraries', name: 'Libraries' }),
     isActive: tabs.currentTab?.type === 'libraries',
+    disabled: !projects.currentProjectId,
   },
   {
     name: 'Compile Servers',
     icon: 'mdi-server',
     action: () => panelState.leftPanelType = 'servers',
     isActive: panelState.leftPanelType === 'servers',
+    disabled: !projects.currentProjectId,
   },
   {
     name: 'Settings',
@@ -69,6 +75,7 @@ const menuItems = computed<MenuItem[]>(() => [
       v-for="item in menuItems"
       :key="item.name"
       :active="item.isActive"
+      :disabled="!!item.disabled"
       @click="item.action"
     >
       <v-list-item-icon>

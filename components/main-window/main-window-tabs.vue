@@ -6,6 +6,7 @@ import VueDraggable from 'vuedraggable';
 
 const theme = useTheme();
 const tabs = useTabs();
+const fileActions = useFileActions();
 
 const darkMode = computed(() => theme.global.current.value.dark);
 const tabsContainer = ref<HTMLElement | null>(null);
@@ -91,6 +92,7 @@ onBeforeUnmount(() => {
   <div 
     ref="tabsContainer"
     class="file-tabs"
+    role="tablist"
   >
     <div class="tabs-scroll-container">
       <VueDraggable
@@ -110,10 +112,12 @@ onBeforeUnmount(() => {
               :color="tab.isCurrent ? 'primary' : undefined"
               class="file-tab px-4 py-2"
               close-icon="mdi-close"
+              role="tab"
               label
               :closable="!notClosable(tab)"
               @click="tabs.selectTab(tab)"
               @click:close="tabs.closeTab(tab)"
+              @contextmenu.stop="fileActions.handleTabContextMenu($event, tab.path)"
             >
               <v-icon
                 :color="getIconColor(tab)"
@@ -182,7 +186,9 @@ onBeforeUnmount(() => {
     opacity: 0;
     transition: opacity 0.1s ease-in-out;
   }
-  &:hover:deep(.v-chip__close) {
+  &:hover:deep(.v-chip__close),
+  &:focus:deep(.v-chip__close),
+  &:deep(.v-chip__close:focus) {
     opacity: 1;
   }
 }

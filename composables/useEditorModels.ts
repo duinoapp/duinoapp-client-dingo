@@ -61,10 +61,10 @@ export const useEditorModels = defineStore('editorModels', () => {
   };
 
   // Watch pending saves and handle file writes
-  watchDebounced(pendingSaves, async (saves) => {
-    if (!saves.size) return;
+  watchDebounced(() => Array.from(pendingSaves.value.values()), async () => {
+    const savePaths = Array.from(pendingSaves.value.values());
+    if (!savePaths.length) return;
     
-    const savePaths = Array.from(saves);
     pendingSaves.value.clear();
 
     projects.addVolatileAction('editor:saveFile');
@@ -277,6 +277,7 @@ export const useEditorModels = defineStore('editorModels', () => {
       const uriObj = monacoRef.value!.Uri.parse(uri);
       const path = uriObj.path.slice(1);
       if (opts.hint.length && !opts.hint.includes(path)) continue;
+      if (path.startsWith('.duinoapp')) continue;
       const results = searchModel(projectId, path, query, options);
       if (results?.length) {
         response[path] = results;

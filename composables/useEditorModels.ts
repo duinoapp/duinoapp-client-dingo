@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import type { editor, Uri } from 'monaco-editor/esm/vs/editor/editor.api';
 import { useMonaco } from '@guolao/vue-monaco-editor';
 import { watchDebounced } from '@vueuse/core';
-import { getContentTypeFromFileName, getLanguageFromContentType } from '@/components/code/code-utils';
+import { getContentTypeFromFileName, getLanguageFromContentType, getFileDefFromFileName } from '@/components/code/code-utils';
 import type { FilesMultitoolChangeEvent, FileStat } from '@duinoapp/files-multitool';
 
 const defaultSearchOptions = {
@@ -37,6 +37,7 @@ export const useEditorModels = defineStore('editorModels', () => {
   // Cache models by their URIs
   const models = shallowRef(new Map<string, editor.ITextModel>());
   const modelStates = shallowRef(new Map<string, editor.ICodeEditorViewState>());
+  const rawBuffers = shallowRef(new Map<string, Uint8Array>());
   const loading = ref(false);
   const searching = ref(false);
   const error = ref<Error | null>(null);
@@ -60,6 +61,18 @@ export const useEditorModels = defineStore('editorModels', () => {
     return getUri(projectId, path).toString();
   };
 
+  // Helper to get info from a URI
+  const parseUri = (uri: string): { projectId: string, path: string } => {
+    const uriObj = monacoRef.value!.Uri.parse(uri);
+    return { projectId: uriObj.authority, path: uriObj.path.slice(1) };
+  };
+
+  const isTextFile = (path: string) => {
+    const fileDef = getFileDefFromFileName(path);
+    const editorType = fileDef.editor;
+    return editorType === 'code' || editorType === 'rich-text';
+  };
+
   // Watch pending saves and handle file writes
   watchDebounced(() => Array.from(pendingSaves.value.values()), async () => {
     const savePaths = Array.from(pendingSaves.value.values());
@@ -73,9 +86,10 @@ export const useEditorModels = defineStore('editorModels', () => {
         const model = models.value.get(uriStr);
         if (!model) return;
 
-        const uri = monacoRef.value!.Uri.parse(uriStr);
-        const path = uri.path.slice(1); // Remove leading slash
-        
+        const { projectId, path } = parseUri(uriStr);
+        if (projectId !== projects.currentProjectId) return;
+        if (!isTextFile(path)) return;
+
         await projects.storage?.writeFile(path, model.getValue());
       }));
     } catch (e) {
@@ -86,11 +100,21 @@ export const useEditorModels = defineStore('editorModels', () => {
     }
   }, { debounce: 500 });
 
+
+  const loadContent = async (projectId: string, path: string): Promise<string> => {
+    const uriStr = getUriString(projectId, path);
+    const raw = await projects.storage?.readFile(path, 'base64') ?? '';
+    const buffer = await fetch(`data:application/octet-stream;base64,${raw}`).then(r => r.arrayBuffer());
+    rawBuffers.value.set(uriStr, new Uint8Array(buffer));
+    if (!isTextFile(path)) return '';
+    return new TextDecoder().decode(buffer);
+  };
+  
   const loadModelContent = async (projectId: string, path: string) => {
     const uriStr = getUriString(projectId, path);
     const model = models.value.get(uriStr);
     if (!model) return;
-    const content = await projects.storage?.readFile(path) ?? '';
+    const content = await loadContent(projectId, path);
     if (content !== model.getValue()) {
       model.setValue(content);
     }
@@ -107,7 +131,7 @@ export const useEditorModels = defineStore('editorModels', () => {
       if (model.isDisposed()) {
         models.value.delete(uriStr);
       } else {
-        if (forceContent) {
+        if (forceContent && isTextFile(path)) {
           await loadModelContent(projectId, path);
         }
         return model;
@@ -116,7 +140,7 @@ export const useEditorModels = defineStore('editorModels', () => {
 
     loading.value = true;
     try {
-      const content = await projects.storage?.readFile(path) ?? '';
+      const content = await loadContent(projectId, path);
       const language = getLanguageFromContentType(getContentTypeFromFileName(path));
       
       const model = monacoRef.value.editor.createModel(content, language, getUri(projectId, path));
@@ -155,6 +179,10 @@ export const useEditorModels = defineStore('editorModels', () => {
     return models.value.get(uri) ?? null;
   };
 
+  const getModelRawBuffer = (uri: string): Uint8Array | null => {
+    return rawBuffers.value.get(uri) ?? null;
+  };
+
   // Dispose model
   const disposeModel = (projectId: string, path: string) => {
     const uriStr = getUriString(projectId, path);
@@ -164,6 +192,7 @@ export const useEditorModels = defineStore('editorModels', () => {
       models.value.delete(uriStr);
       modelStates.value.delete(uriStr);
       pendingSaves.value.delete(uriStr);
+      rawBuffers.value.delete(uriStr);
     }
   };
 
@@ -211,6 +240,7 @@ export const useEditorModels = defineStore('editorModels', () => {
         model.dispose();
         models.value.delete(oldUriStr);
         modelStates.value.delete(oldUriStr);
+        rawBuffers.value.delete(oldUriStr);
       }
     }
     handlingEvents.value = false;
@@ -273,11 +303,11 @@ export const useEditorModels = defineStore('editorModels', () => {
     let count = 0;
     let fileCount = 0;
     for (const uri of Array.from(models.value.keys()).sort()) {
-      if (!uri.startsWith(`file://${projectId}/`)) continue;
-      const uriObj = monacoRef.value!.Uri.parse(uri);
-      const path = uriObj.path.slice(1);
-      if (opts.hint.length && !opts.hint.includes(path)) continue;
+      const { projectId: modelProjectId, path } = parseUri(uri);
       if (path.startsWith('.duinoapp')) continue;
+      if (opts.hint.length && !opts.hint.includes(path)) continue;
+      if (modelProjectId !== projectId) continue;
+
       const results = searchModel(projectId, path, query, options);
       if (results?.length) {
         response[path] = results;
@@ -336,8 +366,10 @@ export const useEditorModels = defineStore('editorModels', () => {
     error,
     getUri,
     getUriString,
+    parseUri,
     getModel,
     getModelByUri,
+    getModelRawBuffer,
     disposeModel,
     saveViewState,
     getViewState,

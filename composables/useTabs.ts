@@ -155,7 +155,21 @@ export const useTabs = defineStore('tabs', () => {
     if (!value) return;
     setTimeout(async (): Promise<void> => {
       try {
-        if (projects.inoFileName) await openFileTab(projects.inoFileName);
+        const projectTabs = tabs.value.filter(t => t.projectId === projects.currentProjectId);
+        // check if all the file tabs still exist
+        await Promise.all(projectTabs.map(async (t) => {
+          if (t.type === 'file' && t.path) {
+            const exists = await projects.storage?.exists(t.path);
+            if (!exists) closeTab(t);
+          }
+        }));
+        // open ino file if it exists and there are no tabs for this project
+        if (
+          projects.inoFileName
+          && !projectTabs.length
+        ) {
+          await openFileTab(projects.inoFileName);
+        }
       } catch (e) {}
     }, 100);
   }, { immediate: true });

@@ -63,16 +63,27 @@ const transformScroll = (event: WheelEvent) => {
   container.scrollLeft += (event.deltaY / 2) + event.deltaX;
 };
 
+const scrollToTab = (tab: ProjectTab) => {
+  const tabElement = document.querySelector(`[data-tab-id="${tab.id}"]`) as HTMLElement;
+  if (tabElement) {
+    tabElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    return true;
+  }
+  return false;
+};
+
 // Scroll active tab into view
 watch(() => tabs.currentTab, (newTab) => {
   if (!newTab) return;
-  nextTick(() => {
-    const tabElement = document.querySelector(`[data-tab-id="${newTab.id}"]`) as HTMLElement;
-    if (tabElement) {
-      tabElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    setTimeout(() => {
+      // handle project loading taking a while
+      if (!scrollToTab(newTab)) {
+        setTimeout(() => {
+        scrollToTab(newTab);
+      }, 1000);
     }
-  });
-});
+  }, 100);
+}, { immediate: true });
 
 onMounted(() => {
   if (tabsContainer.value) {

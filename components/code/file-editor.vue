@@ -2,6 +2,7 @@
 import { useTheme } from 'vuetify';
 import { useEditorModels } from '@/composables/useEditorModels';
 import CodeEditor from '@/components/code/code-editor.vue';
+import { getFileDefFromFileName } from '@/components/code/code-utils';
 
 const tabs = useTabs();
 const editorModels = useEditorModels();
@@ -13,6 +14,15 @@ type CodeEditorType = InstanceType<typeof CodeEditor>;
 const codeEditor = useTemplateRef<CodeEditorType>('editor');
 
 const highlightColor = computed(() => theme.global.current.value.colors.primary);
+
+const editorType = computed(() => {
+  if (!currentUri.value) return null;
+  const { path } = editorModels.parseUri(currentUri.value);
+  const fileDef = getFileDefFromFileName(path);
+  return fileDef.editor || 'code';
+});
+
+const isMedia = computed(() => ['image', 'video', 'audio'].includes(editorType.value || ''));
 
 // Load model when tab changes
 watch([
@@ -32,13 +42,15 @@ watch([
     // Only set URI after model is loaded
     currentUri.value = editorModels.getUriString(projectId, path);
 
-    setTimeout(() => {
-      if (range) {
-        codeEditor.value?.editorRef?.revealRangeInCenter(range);
-        codeEditor.value?.editorRef?.setSelection(range);
-        tabs.clearRange(tabs.currentTab!);
-      }
-    }, 100);
+    if (editorType.value === 'code') {
+      setTimeout(() => {
+        if (range) {
+          codeEditor.value?.editorRef?.revealRangeInCenter(range);
+          codeEditor.value?.editorRef?.setSelection(range);
+          tabs.clearRange(tabs.currentTab!);
+        }
+      }, 100);
+    }
   }
 }, { immediate: true });
 
@@ -52,9 +64,15 @@ watch([
     height="1"
   />
   <code-editor
+    v-show="editorType === 'code'"
     :uri="currentUri"
     :highlight-color="highlightColor"
     style="height: calc(100% - 1px);"
     ref="editor"
+  />
+  <media-view
+    v-show="isMedia"
+    :uri="isMedia ? currentUri : null"
+    :type="editorType as 'image' | 'video' | 'audio'"
   />
 </template>

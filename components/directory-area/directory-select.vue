@@ -40,7 +40,7 @@ onMounted(loadItems);
 </script>
 
 <template>
-  <v-select
+  <v-autocomplete
     v-model="modelValue"
     :items="items"
     :label="label"

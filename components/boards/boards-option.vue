@@ -28,7 +28,7 @@ const items = computed(() => {
     :items="items"
     :label="config.option_label"
     density="compact"
-    variant="solo-filled"
+    variant="outlined"
     hide-details="auto"
     @update:model-value="setBoardOption(config.option, $event)"
   />

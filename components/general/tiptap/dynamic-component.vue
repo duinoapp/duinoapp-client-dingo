@@ -83,8 +83,10 @@ watch(uri, loadFile, { immediate: true });
           :exclude-path="currentPath"
           label="Select a file to display"
           type="file"
+          variant="outlined"
+          hide-details="auto"
           class="my-4"
-          hide-details
+          style="max-width: 400px;"
           @update:model-value="updatePath($event ?? '')"
         />
         <media-view
@@ -129,6 +131,7 @@ watch(uri, loadFile, { immediate: true });
                   v-model.number="lineNumber"
                   type="number"
                   density="compact"
+                  variant="outlined"
                   :min="1"
                   hide-details
                   width="150"
@@ -185,6 +188,9 @@ watch(uri, loadFile, { immediate: true });
   .content {
     padding: 1rem;
     max-height: 500px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   .not-found {

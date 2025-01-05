@@ -104,7 +104,7 @@ const handleSubmit = async () => {
           Let's save the file to get it away from him!
         </div>
         <v-form @submit.prevent="handleSubmit">
-          <div v-if="showName" class="text-caption mb-2">
+          <div v-if="showName" class="text-caption mb-4">
             {{ selectedPath }}/{{ fullFileName }}
           </div>
           <v-row v-if="showPath || showName" align="center">
@@ -114,6 +114,8 @@ const handleSubmit = async () => {
                 :exclude-path="dialog.path"
                 label="Path"
                 type="folder"
+                variant="outlined"
+                hide-details="auto"
               />
             </v-col>
             <v-col v-if="showName" cols="12" :md="dialog.actionType === 'file' ? 8 : 12">
@@ -121,12 +123,14 @@ const handleSubmit = async () => {
                 v-model.trim="fileName"
                 :label="dialog.actionType === 'file' ? 'File name' : 'Folder name'"
                 :rules="fileNameRules"
+                variant="outlined"
               />
             </v-col>
             <v-col v-if="showExtension" cols="12" md="4">
               <extension-select
                 v-model="fileExtension"
                 label="File extension"
+                variant="outlined"
               />
             </v-col>
           </v-row>
@@ -144,19 +148,17 @@ const handleSubmit = async () => {
       <v-card-actions>
         <v-spacer />
         <v-btn
-          color="grey"
           variant="text"
           @click="fileActions.closeDialog"
         >
           Cancel
         </v-btn>
-        <v-btn
-          color="primary"
+        <btn-primary
           :loading="loading"
           @click="handleSubmit"
         >
           {{ dialog.type === 'delete' ? 'Delete' : 'Save' }}
-        </v-btn>
+        </btn-primary>
       </v-card-actions>
     </v-card>
   </v-dialog>

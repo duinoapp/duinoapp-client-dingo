@@ -1,4 +1,14 @@
 <script setup lang="ts">
+import { useTheme } from 'vuetify'
+
+const theme = useTheme();
+const settings = useSettings();
+
+
+watch(() =>settings.isDarkTheme, (newIsDarkTheme) => {
+  theme.global.name.value = newIsDarkTheme ? 'duinoDark' : 'duinoLight';
+}, { immediate: true });
+
 const year = new Date().getFullYear();
 const { public: { version } } = useRuntimeConfig();
 </script>

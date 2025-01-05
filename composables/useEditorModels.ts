@@ -161,6 +161,10 @@ export const useEditorModels = defineStore('editorModels', () => {
     }
   };
 
+  const addModel = (model: editor.ITextModel) => {
+    models.value.set(model.uri.toString(), model);
+  };
+
   // Save view state for a model
   const saveViewState = (uri: string, state: editor.ICodeEditorViewState | null) => {
     if (state) {
@@ -367,6 +371,7 @@ export const useEditorModels = defineStore('editorModels', () => {
     getUri,
     getUriString,
     parseUri,
+    addModel,
     getModel,
     getModelByUri,
     getModelRawBuffer,

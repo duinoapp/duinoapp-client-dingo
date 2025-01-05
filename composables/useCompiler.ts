@@ -43,6 +43,7 @@ interface CompileResponse {
 
 export const useCompiler = defineStore('compiler', () => {
   const projects = useProjects();
+  const settings = useSettings();
   const programTerm = useProgramTerminal();
   const { getServerUrl, checkCurrentServer } = useServers();
   const { getLibsForCompiler } = useLibraries();
@@ -82,6 +83,9 @@ export const useCompiler = defineStore('compiler', () => {
       fqbn: projects.settings?.board || 'arduino:avr:uno',
       files,
       libs,
+      flags: {
+        verbose: !!settings.settings?.compiler?.verboseOutput,
+      },
     } as CompileRequest);
     const key = await hash(body);
 

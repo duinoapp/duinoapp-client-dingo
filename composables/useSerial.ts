@@ -1,5 +1,20 @@
 import { WebSerialPortPromise } from '@duinoapp/upload-multitool';
 
+const baudRateItems = [
+  300,
+  1200,
+  2400,
+  4800,
+  9600,
+  14400,
+  19200,
+  38400,
+  57600,
+  115200,
+  128000,
+  256000,
+];
+
 export const useSerial = defineStore('serial', () => {
   const projects = useProjects();
   const compiler = useCompiler();
@@ -83,6 +98,8 @@ export const useSerial = defineStore('serial', () => {
     webPort: computed(() => port.value?.port),
     updatePort,
     baudRate,
+    baudRateItems,
+    encoding,
     appendNewLine,
     connecting,
     open,

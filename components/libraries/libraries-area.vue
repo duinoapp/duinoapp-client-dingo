@@ -38,7 +38,7 @@ watch(search, (to, from) => {
         v-model="search"
         label="Search libraries"
         density="compact"
-        variant="solo"
+        variant="outlined"
         hide-details="auto"
         autocomplete="off"
         clearable

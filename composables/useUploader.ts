@@ -3,6 +3,7 @@ import type { ProgramConfig } from '@duinoapp/upload-multitool';
 
 export const useUploader = defineStore('uploader', () => {
   const compiler = useCompiler();
+  const settings = useSettings();
   const programTerm = useProgramTerminal();
   const serialTerm = useSerialTerminal();
   const serial = useSerial();
@@ -33,7 +34,7 @@ export const useUploader = defineStore('uploader', () => {
       tool: boards?.currentBoard?.properties?.upload?.tool || 'avrdude',
       cpu: boards?.currentBoard?.properties?.build?.mcu || 'atmega328p',
       stdout: programTerm,
-      verbose: true,
+      verbose: !!settings.settings?.compiler?.verboseOutput,
     } as ProgramConfig;
 
     const res = await upload(serial.port, config);

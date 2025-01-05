@@ -9,7 +9,7 @@ const serial = useSerial();
     <v-card title="Connect Device" style="width: 250px;">
       <v-card-text>
         <baud-select
-          variant="solo-filled"
+          variant="outlined"
           density="compact"
           hide-details
           class="mb-2"

@@ -37,7 +37,7 @@ watch(platform, (to, from) => {
           v-model="search"
           label="Search boards"
           density="compact"
-          variant="solo"
+          variant="outlined"
           hide-details="auto"
           autocomplete="off"
           clearable
@@ -50,7 +50,7 @@ watch(platform, (to, from) => {
           :items="boards.platforms"
           label="Platform"
           density="compact"
-          variant="solo"
+          variant="outlined"
           hide-details="auto"
           clearable
         />

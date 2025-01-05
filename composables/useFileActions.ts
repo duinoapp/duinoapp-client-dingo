@@ -24,6 +24,7 @@ interface ContextMenu {
 
 export const useFileActions = defineStore('fileActions', () => {
   const projects = useProjects();
+  const tabs = useTabs();
 
   // Dialog state
   const dialog = reactive<FileActionDialog>({
@@ -139,6 +140,7 @@ export const useFileActions = defineStore('fileActions', () => {
       contentBuffer = content;
     }
     await projects.storage.writeFile(path, contentBuffer);
+    tabs.openFileTab(path);
   };
 
   const createFolder = async (parentPath: string, name: string) => {

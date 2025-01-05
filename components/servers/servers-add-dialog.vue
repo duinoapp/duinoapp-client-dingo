@@ -75,7 +75,7 @@ const addServer = async () => {
             :error-messages="v$.url.$errors.map((e) => `${e.$message}`)"
             :hint="hint"
             label="Server URL"
-            variant="solo-filled"
+            variant="outlined"
             autofocus
           />
         </v-form>

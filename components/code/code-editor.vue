@@ -13,7 +13,7 @@ const props = withDefaults(defineProps<{
   readonly?: boolean,
 }>(), {
   uri: null,
-  theme: 'vs-dark',
+  theme: '',
   options: () => ({
     automaticLayout: true,
     formatOnType: true,
@@ -27,6 +27,7 @@ const props = withDefaults(defineProps<{
 const { monacoRef, unload } = useMonaco();
 const editorModels = useEditorModels();
 const search = useSearch();
+const settings = useSettings();
 
 const editorRef = shallowRef<editor.IStandaloneCodeEditor>();
 const searchCollection = shallowRef<editor.IEditorDecorationsCollection>();
@@ -38,6 +39,7 @@ const setSearchDecorators = (uri: string) => {
     return;
   }
   const { authority, path } = monacoRef.value.Uri.parse(uri);
+  if (authority === 'duinoapp') return;
   const results = editorModels.searchModel(
     authority,
     path,
@@ -119,6 +121,15 @@ const handleMount = (codeEditor: editor.IStandaloneCodeEditor) => {
 // Computed
 const ready = computed(() => !!monacoRef.value);
 
+const editorSettings = computed(() => {
+  return {
+    ...settings.settings.editor,
+    readOnly: props.readonly,
+    ...props.options,
+    theme: props.theme || settings.settings.editor.theme || 'vs-dark',
+  };
+});
+
 // Watchers
 watch(() => props.uri, (newUri, oldUri) => {
   if (!editorRef.value) return;
@@ -157,8 +168,8 @@ defineExpose({
 <template>
   <vue-monaco-editor
     v-if="ready"
-    :theme="theme"
-    :options="{ ...options, readOnly: readonly }"
+    :theme="editorSettings.theme"
+    :options="editorSettings"
     @mount="handleMount"
   />
 </template>

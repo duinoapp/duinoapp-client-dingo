@@ -115,7 +115,7 @@ const close = () => {
             Choose where to keep the project files.<br>
             Browser storage is easiest to use, but can be volatile.<br>
             The computer's file system is generally more reliable, but can be more annoying to manage.<br>
-            Cloud storage is the safest and most portable, but can be slow and requires an active internet connection.
+            <!-- Cloud storage is the safest and most portable, but can be slow and requires an active internet connection. -->
           </v-tooltip>
         </div>
         <v-row align="center" class="mb-2">
@@ -140,7 +140,8 @@ const close = () => {
           v-model="projectName"
           label="Project name"
           :rules="projectNameRules"
-          dense
+          variant="outlined"
+          hide-details="auto"
         />
       </v-card-text>
       <v-card-actions>
@@ -151,14 +152,12 @@ const close = () => {
         >
           Cancel
         </v-btn>
-        <v-btn
+        <btn-primary
           :loading="loading"
-          variant="tonal"
-          color="primary"
           @click="submit"
         >
           {{ title.split(' ')[0] }}
-        </v-btn>
+        </btn-primary>
       </v-card-actions>
     </v-card>
   </v-dialog>

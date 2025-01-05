@@ -4,9 +4,11 @@ import { useTemplateRef } from 'vue';
 const props = withDefaults(defineProps<{
   uri?: string | null,
   type?: 'image' | 'video' | 'audio',
+  noPadding?: boolean,
 }>(), {
   uri: null,
   type: 'image',
+  noPadding: false,
 });
 
 const editorModels = useEditorModels();
@@ -64,11 +66,12 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div v-if="dataUri" class="viewer-container">
+  <div v-if="dataUri" class="viewer-container" :class="{ 'no-padding': props.noPadding }">
     <v-img
       v-if="type === 'image'"
       :src="dataUri"
       max-height="100%"
+      height="500"
       max-width="100%"
     />
     <video
@@ -76,11 +79,11 @@ onBeforeUnmount(() => {
       :key="dataUri"
       :src="dataUri"
       controls
-      class="raw-media"
+      class="raw-media video-player"
     />
 
     <v-img
-      v-if="type === 'audio'"
+      v-if="type === 'audio' && !props.noPadding"
       src="/bop.gif"
       max-height="300px"
       width="100%"
@@ -100,6 +103,8 @@ onBeforeUnmount(() => {
 <style scoped lang="scss">
 .viewer-container {
   height: calc(100% - 1px);
+  min-height: 200px;
+  max-height: 100%;
   width: 100%;
   display: flex;
   flex-wrap: wrap;
@@ -107,6 +112,10 @@ onBeforeUnmount(() => {
   justify-content: center;
   align-content: center;
   padding: 64px;
+
+  &.no-padding {
+    padding: 0;
+  }
 }
 
 .viewer-container .raw-media {
@@ -116,6 +125,11 @@ onBeforeUnmount(() => {
 
 .viewer-container .audio-player {
   width: 600px;
+}
+
+// the video element really doesn't like not having a width in flex on chrome
+.viewer-container .video-player {
+  width: 100%;
 }
 
 .viewer-container .bop {

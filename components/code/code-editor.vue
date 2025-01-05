@@ -9,6 +9,8 @@ const props = withDefaults(defineProps<{
   theme?: string,
   options?: EditorOptions,
   highlightColor?: string,
+  lineNumber?: number | null,
+  readonly?: boolean,
 }>(), {
   uri: null,
   theme: 'vs-dark',
@@ -18,6 +20,8 @@ const props = withDefaults(defineProps<{
     formatOnPaste: true,
   }),
   highlightColor: 'rgba(93, 167, 151, 0.4)',
+  lineNumber: null,
+  readonly: false,
 });
 
 const { monacoRef, unload } = useMonaco();
@@ -65,6 +69,17 @@ const setSearchDecorators = (uri: string) => {
   searchCollection.value?.set(decorations);
 };
 
+const setLineNumber = () => {
+  setTimeout(() => {
+    if (!editorRef.value || !props.lineNumber) return;
+    editorRef.value.revealLineInCenter(props.lineNumber);
+    editorRef.value.setPosition({
+      lineNumber: props.lineNumber,
+      column: 1,
+    });
+  }, 100);
+};
+
 // Helper functions to manage editor state
 const saveEditorState = (uri: string) => {
   if (!editorRef.value) return;
@@ -83,6 +98,7 @@ const setEditorModel = (uri: string) => {
     editorRef.value.restoreViewState(state);
   }
   setSearchDecorators(uri);
+  setLineNumber();
 };
 
 // Event handlers
@@ -120,6 +136,10 @@ watch(() => search.searchResults, () => {
   setSearchDecorators(props.uri);
 });
 
+watch(() => props.lineNumber, () => {
+  setLineNumber();
+});
+
 // Lifecycle
 onBeforeUnmount(() => {
   if (props.uri) {
@@ -138,7 +158,7 @@ defineExpose({
   <vue-monaco-editor
     v-if="ready"
     :theme="theme"
-    :options="options"
+    :options="{ ...options, readOnly: readonly }"
     @mount="handleMount"
   />
 </template>

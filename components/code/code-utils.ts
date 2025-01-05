@@ -118,7 +118,7 @@ export const fileDefs: FileDef[] = [
   },
   {
     exts: ['md'],
-    editor: 'code',
+    editor: 'rich-text',
     icon: 'mdi-language-markdown',
     iconColor: '#000000',
     iconColorDark: '#ffffff',

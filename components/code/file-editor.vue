@@ -75,4 +75,9 @@ watch([
     :uri="isMedia ? currentUri : null"
     :type="editorType as 'image' | 'video' | 'audio'"
   />
+  <rich-editor
+    v-show="editorType === 'rich-text'"
+    :uri="editorType === 'rich-text' ? currentUri : null"
+  />
 </template>
+

@@ -113,6 +113,7 @@ const handleSubmit = async () => {
                 v-model="selectedPath"
                 :exclude-path="dialog.path"
                 label="Path"
+                type="folder"
               />
             </v-col>
             <v-col v-if="showName" cols="12" :md="dialog.actionType === 'file' ? 8 : 12">

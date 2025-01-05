@@ -4,9 +4,10 @@ import type { FileStat } from '@duinoapp/files-multitool';
 const props = defineProps<{
   label: string;
   excludePath?: string;
+  type?: 'folder' | 'file';
 }>();
 
-const modelValue = defineModel<string>();
+const modelValue = defineModel<string | null>({ default: null });
 
 const projects = useProjects();
 
@@ -18,10 +19,17 @@ const loadItems = async () => {
   loading.value = true;
   const pathMap = await projects.storage.list('/', true);
   items.value = Object.entries(pathMap)
-    .filter(([path, stat]: [string, FileStat]) => stat.isDirectory && !path.startsWith('.duinoapp'))
+    .filter(([path, stat]: [string, FileStat]) => {
+      if (path.startsWith('.duinoapp')) return false;
+      if (props.type === 'folder') return stat.isDirectory;
+      if (props.type === 'file') return stat.isFile;
+      return true;
+    })
     .map(([path]) => ({ title: `/${path}`, value: path }))
     .sort();
-  items.value.unshift({ title: '/ (project root)', value: '' });
+  if (props.type === 'folder') {
+    items.value.unshift({ title: '/ (project root)', value: '' });
+  }
   if (props.excludePath) {
     items.value = items.value.filter((item) => item.value !== props.excludePath);
   }

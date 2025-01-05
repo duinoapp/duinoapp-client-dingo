@@ -41,7 +41,6 @@ export const useSearch = defineStore('search', () => {
       // so we can search in the same files again if the query is prefixed with the last search query
       hint = Object.keys(searchResults.value);
     }
-    console.log('triggerSearch', query, searchOptions.value, hint, globalSearchLimit.value);
     const results = await editorModels.searchProject(
       query,
       { ...searchOptions.value },

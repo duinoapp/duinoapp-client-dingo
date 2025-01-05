@@ -38,7 +38,9 @@ const { public: { version } } = useRuntimeConfig();
 
 <style scoped>
 .app {
-  font-family: "Droid Sans Mono", "monospace", monospace;
+  font-family: "Roboto Mono", "Droid Sans Mono", "monospace", monospace;
+  font-optical-sizing: auto;
+  font-style: normal;
   font-size: 14px;
 }
 </style>

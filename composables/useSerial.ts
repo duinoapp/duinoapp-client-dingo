@@ -23,6 +23,7 @@ export const useSerial = defineStore('serial', () => {
 
   const port = shallowRef(null as WebSerialPortPromise | null);
   const connecting = ref(false);
+  const error = ref('');
 
   const settings = computed(() => projects.settings?.monitor || {});
   const updateSettings = (newSettings: typeof settings.value) => {
@@ -40,36 +41,52 @@ export const useSerial = defineStore('serial', () => {
     get: () => settings.value.encoding || 'utf8',
     set: (value) => updateSettings({ encoding: value }),
   });
+  const plotTimeWindow = computed({
+    get: () => settings.value.plotTimeWindow || 60,
+    set: (value) => updateSettings({ plotTimeWindow: value }),
+  });
+  const plotLockY = computed({
+    get: () => settings.value.plotLockY || false,
+    set: (value) => updateSettings({ plotLockY: value }),
+  });
+  const plotPaused = ref(false);
 
   const handleData = (data: Buffer) => {
     if (compiler.compiling || uploader.uploading) return;
     serialTerm.write(data.toString(encoding.value));
   };
+
   const handleClose = () => {
     if (port.value) unregisterPort(port.value);
     port.value = null;
-  }
+  };
 
   const registerPort = (newPort: WebSerialPortPromise) => {
     newPort.on('data', handleData);
     newPort.on('close', handleClose);
     port.value = newPort;
-  }
+  };
+
   const unregisterPort = (oldPort: WebSerialPortPromise) => {
     oldPort?.off?.('data', handleData);
     oldPort?.off?.('close', handleClose);
-  }
+  };
 
   const open = async () => {
     if (port.value) return;
+    error.value = '';
     connecting.value = true;
-    const webPort = await WebSerialPortPromise.requestPort(
-      {},
-      { baudRate: baudRate.value },
-    );
-    registerPort(webPort);
+    try {
+      const webPort = await WebSerialPortPromise.requestPort(
+        {},
+        { baudRate: baudRate.value },
+      );
+      registerPort(webPort);
+      if (!port.value) throw new Error('No serial port selected.');
+    } catch (e) {
+      error.value = (e as Error).message;
+    }
     connecting.value = false;
-    if (!port.value) throw new Error('No serial port selected.');
   };
 
   const close = () => {
@@ -101,6 +118,10 @@ export const useSerial = defineStore('serial', () => {
     baudRateItems,
     encoding,
     appendNewLine,
+    plotTimeWindow,
+    plotLockY,
+    plotPaused,
+    error,
     connecting,
     open,
     close,

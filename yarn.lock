@@ -1199,6 +1199,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@canvasjs/charts@npm:^3.10.21":
+  version: 3.10.21
+  resolution: "@canvasjs/charts@npm:3.10.21"
+  checksum: 10c0/08de714a7dfa7c191da1e6801d4ccaaa5db5f72dab1fe5624088aa9da321d7ad476945227496b5a16533a5c410a546789471b265af64b46020c6a89c9ef4c21e
+  languageName: node
+  linkType: hard
+
 "@cloudflare/kv-asset-handler@npm:^0.3.4":
   version: 0.3.4
   resolution: "@cloudflare/kv-asset-handler@npm:0.3.4"
@@ -5246,6 +5253,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "duinoapp-client-dingo@workspace:."
   dependencies:
+    "@canvasjs/charts": "npm:^3.10.21"
     "@duinoapp/files-multitool": "npm:^0.0.5"
     "@duinoapp/upload-multitool": "npm:^0.0.3"
     "@guolao/vue-monaco-editor": "npm:^1.5.4"

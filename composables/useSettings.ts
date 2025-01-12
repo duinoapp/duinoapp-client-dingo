@@ -79,7 +79,7 @@ export const useSettings = defineStore('settings', () => {
     settingsModel.value = monacoRef.value.editor
       .createModel(JSON.stringify(settings.value, null, 2), 'json', uri);
 
-    console.log('addModel', settingsModel.value);
+    // console.log('addModel', settingsModel.value);
     editorModels.addModel(settingsModel.value);
 
     settingsUri.value = defaultSettingsUri;

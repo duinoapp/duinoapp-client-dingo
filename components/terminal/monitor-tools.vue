@@ -1,5 +1,9 @@
 <script setup lang="ts">
 
+const props = defineProps<{
+  isPlotter: boolean
+}>();
+
 const serialTerm = useSerialTerminal();
 const serial = useSerial();
 
@@ -23,6 +27,19 @@ const clear = () => {
   serialTerm.clear();
 };
 
+const windowItems = computed(() => [
+  { title: '10 seconds', value: 10 },
+  { title: '30 seconds', value: 30 },
+  { title: '1 minute', value: 60 },
+  { title: '5 minutes', value: 300 },
+  { title: '10 minutes', value: 600 },
+  { title: '30 minutes', value: 1800 },
+  { title: '1 hour', value: 3600 },
+  { title: '5 hours', value: 18000 },
+  { title: '10 hours', value: 36000 },
+  { title: '1 day', value: 86400 },
+]);
+
 </script>
 
 <template>
@@ -37,6 +54,7 @@ const clear = () => {
       :disabled="!message"
       class="ml-2"
       density="compact"
+      variant="text"
       icon
       @click="send"
     >
@@ -54,6 +72,7 @@ const clear = () => {
       :color="serial.appendNewLine ? 'primary' : undefined"
       class="ml-2"
       density="compact"
+      variant="text"
       icon
       @click="serial.appendNewLine = !serial.appendNewLine"
     >
@@ -68,8 +87,28 @@ const clear = () => {
       </v-tooltip>
     </v-btn>
     <v-btn
+      v-if="isPlotter"
       class="ml-2"
       density="compact"
+      variant="text"
+      icon
+      :color="serial.plotLockY ? 'primary' : undefined"
+      @click="serial.plotLockY = !serial.plotLockY"
+    >
+      <v-icon size="small">
+        mdi-arrow-vertical-lock
+      </v-icon>
+      <v-tooltip
+        activator="parent"
+        location="top"
+      >
+        Lock Y Axis to Zero ({{ serial.plotLockY ? 'on' : 'off' }})
+      </v-tooltip>
+    </v-btn>
+    <v-btn
+      class="ml-2"
+      density="compact"
+      variant="text"
       icon
       @click="disconnect"
     >
@@ -86,6 +125,7 @@ const clear = () => {
     <v-btn
       class="ml-2"
       density="compact"
+      variant="text"
       icon
       @click="clear"
     >
@@ -99,6 +139,35 @@ const clear = () => {
         Clear Monitor
       </v-tooltip>
     </v-btn>
+    <v-btn
+      v-if="isPlotter"
+      :color="serial.plotPaused ? 'primary' : undefined"
+      class="ml-2"
+      density="compact"
+      variant="text"
+      icon
+      @click="serial.plotPaused = !serial.plotPaused"
+    >
+      <v-icon size="small">
+        {{ serial.plotPaused ? 'mdi-play' : 'mdi-pause' }}
+      </v-icon>
+      <v-tooltip
+        activator="parent"
+        location="top"
+      >
+        Pause Plotter ({{ serial.plotPaused ? 'on' : 'off' }})
+      </v-tooltip>
+    </v-btn>
+    <v-select
+      v-model="serial.plotTimeWindow"
+      :items="windowItems"
+      density="compact"
+      variant="outlined"
+      label="Time Window"
+      hide-details
+      style="max-width: 130px;"
+      class="ml-2"
+    />
     <baud-select
       density="compact"
       hide-details

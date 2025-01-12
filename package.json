@@ -55,6 +55,7 @@
     "xterm-addon-fit": "^0.8.0"
   },
   "dependencies": {
+    "@canvasjs/charts": "^3.10.21",
     "@duinoapp/files-multitool": "^0.0.5",
     "@duinoapp/upload-multitool": "^0.0.3",
     "@pinia/nuxt": "^0.9.0",

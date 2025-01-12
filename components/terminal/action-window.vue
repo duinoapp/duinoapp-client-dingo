@@ -15,11 +15,14 @@ const reFit = () => {
     if (tab.value === 'program') {
       programTerm.value?.fit();
       programTerm.value?.focus();
+      heightType.value = 'max-height';
     } else if (tab.value === 'monitor') {
       monitorTerm.value?.fit();
       monitorTerm.value?.focus();
+      heightType.value = 'max-height';
+    } else if (tab.value === 'plot') {
+      // The plotter will auto-fit due to Chart.js responsive mode
     }
-    heightType.value = 'max-height';
   }, 50);
 };
 
@@ -68,12 +71,10 @@ watch(computed(() => compiler.compiling), (value) => {
     <div :style="`${heightType}: calc(100% - ${tab === 'program' ? 36 : 76}px);`">
       <terminal-area v-show="tab === 'program'" ref="programTerm" type="program" />
       <terminal-area v-show="tab === 'monitor'" ref="monitorTerm" type="serial" />
-      <div v-show="tab === 'plot'" style="height: calc(100% - 76px)">
-        put graph here
-      </div>
+      <plotter v-show="tab === 'plot'" :active="tab === 'plot'" ref="plotter" height="100%" />
     </div>
     <div v-show="tab !== 'program'" class="flex-grow-1">
-      <monitor-tools />
+      <monitor-tools :is-plotter="tab === 'plot'" />
     </div>
   </div>
 </template>

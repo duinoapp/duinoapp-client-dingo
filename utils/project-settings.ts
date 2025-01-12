@@ -6,6 +6,8 @@ export interface MonitorSettings {
   baudRate?: number
   appendNewLine?: boolean
   encoding?: 'utf8' | 'ascii' | 'base64' | 'hex' | 'binary' | 'utf16le' | 'ucs2' | 'latin1'
+  plotTimeWindow?: number
+  plotLockY?: boolean
 }
 
 export interface CompileSettings {

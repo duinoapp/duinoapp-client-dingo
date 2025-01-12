@@ -2,12 +2,23 @@
 
 const serial = useSerial();
 
+const show = computed(() => serial.port === null);
+
+const readableError = computed(() => {
+  if (!serial.error) return '';
+  if (serial.error.includes(':')) return serial.error.split(':').slice(1).join(':');
+  return serial.error;
+});
+
 </script>
 
 <template>
-  <div v-if="!serial.port" class="connect-overlay">
+  <div v-if="show" class="connect-overlay">
     <v-card title="Connect Device" style="width: 250px;">
       <v-card-text>
+        <div v-show="serial.error" class="text-error text-caption mb-2">
+          {{ readableError }}
+        </div>
         <baud-select
           variant="outlined"
           density="compact"

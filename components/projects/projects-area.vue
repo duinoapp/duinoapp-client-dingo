@@ -3,6 +3,7 @@ import { typeToIcon } from '@/utils/project-display';
 
 const projects = useProjects();
 const tabs = useTabs();
+const { panelState } = usePanels();
 
 const removeProjectId = ref<string | null>(null);
 
@@ -13,7 +14,12 @@ const typeToText = (type: string) => {
 const projectList = computed(() => projects.projectItems);
 
 const handleLoadProject = async (id: string) => {
-  await projects.loadProject(id);
+  try {
+    await projects.loadProject(id);
+    panelState.leftPanelType = 'explore';
+  } catch (e) {
+    console.error(e);
+  }
 };
 
 const handleRemoveProject = async () => {

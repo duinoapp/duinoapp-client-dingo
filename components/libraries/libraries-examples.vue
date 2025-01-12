@@ -59,11 +59,9 @@ watch(libUrl, loadFiles, { immediate: true });
     <v-list-item
       v-for="fileName in fileNames"
       :key="fileName"
+      :title="fileName.split('/').pop()?.replace('.ino', '')"
+      :subtitle="fileName.split('/').slice(0, -1).join('/')"
       @click="openLibraryExample(fileName)"
-    >
-      <v-list-item-title>
-        {{ fileName.replace('.ino', '')}}
-      </v-list-item-title>
-    </v-list-item>
+    />
   </v-list>
 </template>

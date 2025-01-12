@@ -9,6 +9,7 @@ import {
   importFromFile,
   importFromTemplate,
   importFromUrl,
+  exportProject,
   genId,
 } from '@/utils/project-importer';
 
@@ -212,6 +213,11 @@ export const useProjects = defineStore('projects', () => {
     return project;
   };
 
+  const exportCurrentProject = async (): Promise<File> => {
+    if (!currentProject.value) throw new Error('No current project');
+    return await exportProject(currentProject.value as ProjectService);
+  };
+
   const initDialog = (
     type: InitDialogType,
     { ref, inoFileName, onCancel }: { ref?: string, inoFileName?: string, onCancel?: () => void } = {}
@@ -301,6 +307,7 @@ export const useProjects = defineStore('projects', () => {
     loadProject,
     removeProject,
     createProject,
+    exportCurrentProject,
     openProject,
     init,
     updateSettings,

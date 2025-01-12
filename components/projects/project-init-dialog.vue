@@ -12,6 +12,7 @@ const projectName = ref('');
 const projectFile = ref(null as File | null);
 const loading = ref(false);
 const errored = ref(false);
+const storageRequired = ref(false);
 
 const title = computed(() => {
   switch (projects.dialog.type) {
@@ -31,7 +32,7 @@ const title = computed(() => {
 });
 
 const template = computed(() => projects.dialog.type === 'example' ? starterTemplates[projects.dialog.ref] : null);
-const showProjectName = computed(() => !['open', 'import'].includes(projects.dialog.type));
+const showProjectName = computed(() => !['open'].includes(projects.dialog.type));
 const showFileInput = computed(() => projects.dialog.type === 'import');
 const selectableStorage = computed(() => {
   if (projects.dialog.type === 'open') {
@@ -43,18 +44,34 @@ const open = computed(() => projects.dialog.open);
 
 watch(open, () => {
   if (projects.dialog.open) {
+    storageRequired.value = false;
     storageType.value = null;
     projectName.value = '';
     if (template.value) {
       projectName.value = template.value.name;
     } else if (projects.dialog.type === 'library') {
-      projectName.value = startCase(projects.dialog.inoFileName?.split('.')[0] || '');
+      const fileName = projects.dialog.inoFileName?.split('/').pop()?.replace('.ino', '');
+      const ref = projects.dialog.ref?.split('@')[0];
+      projectName.value = `${startCase(ref?.replace(/\d/g, ''))} - ${startCase(fileName)}`;
     }
   }
 }, { immediate: true });
 
+watch(projectFile, (to, from) => {
+  const fileToProjectName = (file: File) => startCase(file.name.split('.').slice(0, -1).join(' '));
+  if (from && projectName.value === fileToProjectName(from)) {
+    projectName.value = '';
+  }
+  if (to && !projectName.value) {
+    projectName.value = fileToProjectName(to);
+  }
+});
+
 const submit = async () => {
-  if (!storageType.value) return;
+  if (!storageType.value) {
+    storageRequired.value = true;
+    return;
+  }
   if (showProjectName.value && !validateRules(projectNameRules, projectName.value)) return;
   loading.value = true;
   errored.value = false;
@@ -104,7 +121,7 @@ const close = () => {
           class="mb-2"
           text="An error occurred while trying to create the project, please try again."
         />
-        <div class="text-h8 mb-2">
+        <div class="text-h8 mb-2" :class="{ 'text-error': storageRequired }">
           Select storage type:
           <v-tooltip location="top">
             <template #activator="{ props }">
@@ -135,6 +152,12 @@ const close = () => {
             </v-btn>
           </v-col>
         </v-row>
+        <v-file-input
+          v-if="showFileInput"
+          v-model="projectFile"
+          label="Project zip file"
+          variant="outlined"
+        />
         <v-text-field
           v-if="showProjectName"
           v-model="projectName"

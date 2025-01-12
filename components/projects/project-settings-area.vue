@@ -102,6 +102,7 @@ const encodingOptions = [
         >
           Global Settings
         </v-btn>
+        <project-export-btn class="ml-2" />
       </div>
     </div>
   </div>

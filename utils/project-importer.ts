@@ -1,5 +1,6 @@
-import { Archive } from 'libarchive.js';
-import type { FilesMultitoolType } from '@duinoapp/files-multitool';
+import { strFromU8, zip, unzip, type AsyncZipOptions, type AsyncZippable } from 'fflate';
+import type { FilesMultitoolType, FileStat } from '@duinoapp/files-multitool';
+import { pascalCase } from 'change-case';
 import type { ProjectSettings } from './project-settings';
 import {
   validateSettings,
@@ -44,47 +45,68 @@ const filesObjectToArray = (filesObject: Record<string, File>, path: string = ''
 
 export const genId = (): string => Math.random().toString(36).substring(2);
 
-const extractProject = async (file: File, inoFileName?: string): Promise<ExtractedProject> => {
-  const archive = await Archive.open(file);
-  const filesArray = await archive.getFilesArray();
-  const settingsFile = filesArray.find((f) => /(^|\/)\.duinoapp\/settings\.json$/.test(`${f.path}${f.file.name}`));
-  const inoFile = filesArray.find((f) => /\w+\.ino$/.test(f.file.name) && (!inoFileName || f.file.name === inoFileName));
-  
+const zipAsync = async (data: AsyncZippable, options: AsyncZipOptions = {}): Promise<Uint8Array> => new Promise((resolve, reject) => {
+  zip(data, options, (err, data) => {
+    if (err) reject(err);
+    else resolve(data);
+  });
+});
+
+const unzipAsync = async (data: Uint8Array): Promise<Record<string, Uint8Array>> => new Promise((resolve, reject) => {
+  unzip(data, (err, data) => {
+    if (err) reject(err);
+    else resolve(data);
+  });
+});
+
+const extractProject = async (file: File | Blob, inoFileName?: string): Promise<ExtractedProject> => {
+  const buffer = await file.arrayBuffer();
+  const files = await unzipAsync(new Uint8Array(buffer));
+
+  // Find settings and ino files
+  const entries = Object.entries(files);
+  const settingsFile = entries.find(([path]) => /(^|\/)\.duinoapp\/settings\.json$/.test(path));
+  const inoFile = entries.find(([path]) => /\w+\.ino$/.test(path) && (!inoFileName || path.endsWith(inoFileName)));
+
   if (!settingsFile && !inoFile) throw new Error('Archive does not contain a valid project.');
   if (!inoFile) throw new Error('Archive does not contain a valid project root file.');
 
-  let extractedFiles = await archive.extractFiles();
   let projectPath;
-  
   if (settingsFile) {
-    projectPath = settingsFile.path.replace(/\/?\.duinoapp\/$/, '');
+    projectPath = settingsFile[0].replace(/\/?\.duinoapp\/.+/, '');
   } else {
-    projectPath = inoFile.path;
-  }
-
-  if (projectPath) {
-    projectPath.split('/').forEach((dir: string) => {
-      if (!dir) return;
-      extractedFiles = extractedFiles[dir];
-    });
+    projectPath = inoFile[0].replace(/\/?[^/]+\.ino$/, '');
   }
 
   let settings: ProjectSettings;
   if (settingsFile) {
     try {
-      settings = JSON.parse(await extractedFiles['.duinoapp']['settings.json'].text());
+      settings = JSON.parse(strFromU8(settingsFile[1]));
       validateSettings(settings);
     } catch (e) {
       console.error(e);
       throw new Error('Failed to parse settings file.');
     }
   } else {
-    settings = getDefaultProjectSettings(getProjectNameFromIno(inoFile.file.name));
+    const inoName = inoFile[0].split('/').pop() || '';
+    settings = getDefaultProjectSettings(getProjectNameFromIno(inoName));
   }
+
+  // Convert files to ExtractedFileItem format
+  const extractedFiles: ExtractedFileItem[] = entries.reduce((acc: ExtractedFileItem[], [fullPath, content]) => {
+    if (projectPath && !fullPath.startsWith(projectPath)) return acc;
+    const path = projectPath ? fullPath.replace(projectPath, '') : fullPath;
+    const fileName = path.split('/').pop() || '';
+    acc.push({
+      path: path.replace(/^\/+/, ''),
+      file: new File([content], fileName)
+    });
+    return acc;
+  }, []);
 
   return {
     settings,
-    files: filesObjectToArray(extractedFiles),
+    files: extractedFiles,
   };
 };
 
@@ -146,15 +168,43 @@ export const importFromTemplate = async (type: FilesMultitoolType, templateId: s
 };
 
 export const getInoFiles = async (file: File): Promise<string[]> => {
-  const archive = await Archive.open(file);
-  const filesArray = await archive.getFilesArray();
-  return filesArray
-    .filter((f) => /\w+\.ino$/.test(f.file.name))
-    .map((f) => f.file.name);
+  const buffer = await file.arrayBuffer();
+  const files = await unzipAsync(new Uint8Array(buffer));
+
+  return Object.keys(files)
+    .filter(path => /\w+\.ino$/.test(path))
 };
 
 export const getInoFilesFromUrl = async (url: string): Promise<string[]> => {
   const res = await fetch(url);
   const blob = await res.blob();
   return getInoFiles(blob as File);
-}; 
+};
+
+export const exportProject = async (project: ProjectService): Promise<File> => {
+  const pathMap = await project.getStorage().list('/', true);
+  const paths = Object.entries(pathMap)
+    .filter(([path, stat]: [string, FileStat]) => stat.isFile)
+    .map(([path]) => path);
+
+  // Create zip object with files
+  const zipObj: Record<string, Uint8Array> = {};
+  
+  await Promise.all(paths.map(async (path) => {
+    const raw = await project.getStorage().readFile(path, 'base64');
+    const blob = await fetch(`data:application/octet-stream;base64,${raw}`).then(r => r.blob());
+    zipObj[path] = new Uint8Array(await blob.arrayBuffer());
+  }));
+
+  // Use synchronous zip since we already have all the data in memory
+  const zipped = await zipAsync(zipObj, {
+    level: 6, // Default compression level
+    mem: 8, // Default memory level
+  });
+
+  return new File(
+    [zipped], 
+    `${pascalCase(project.name)}.zip`, 
+    { type: 'application/zip' }
+  );
+};

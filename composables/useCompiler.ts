@@ -50,11 +50,13 @@ export const useCompiler = defineStore('compiler', () => {
 
   const compiling = ref(false);
   const cache = new Map<string, CompileResponse>();
+  const lastError = ref<string | undefined>(undefined);
 
   const compile = async (): Promise<CompileResponse> => {
+    lastError.value = undefined;
     if (compiling.value) throw new Error('Already compiling.');
     if (!projects.storage) throw new Error('No storage adaptor found.');
-    if (!checkCurrentServer()) throw new Error('Invalid server URL.');
+    if (!checkCurrentServer()) throw new Error('Compile server is not available.');
     await projects.waitForVolatileActions();
     const pathMap = await projects.storage.list('/', true) as PathMap;
     const inoFile = Object.keys(pathMap).find((k) => k.endsWith('.ino'));
@@ -87,7 +89,7 @@ export const useCompiler = defineStore('compiler', () => {
         verbose: !!settings.settings?.compiler?.verboseOutput,
       },
     } as CompileRequest);
-    const key = await hash(body);
+    const key = await hash(body + getServerUrl());
 
     if (cache.has(key)) {
       // fake delay to show loading spinner
@@ -108,18 +110,22 @@ export const useCompiler = defineStore('compiler', () => {
       }).then((r) => r.json());
       programTerm.write(res.log);
       const response = {
-        error: res.error,
+        error: res.error || ((!res.hex && !res.files)
+          ? 'Compilation failed, check the program terminal for more details'
+          : undefined),
         log: res.log,
         hex: res.hex,
         files: res.files,
         flashFreq: res.flash_freq,
         flashMode: res.flash_mode,
       };
+      lastError.value = response.error;
       cache.set(key, response);
       return response;
     } catch (e) {
       const error = e as Error;
       programTerm.write(`Error: ${error.message}`);
+      lastError.value = error.message;
       return { error: error };
     } finally {
       compiling.value = false;
@@ -130,6 +136,7 @@ export const useCompiler = defineStore('compiler', () => {
     getServerUrl,
     compile,
     compiling,
+    lastError,
   };
 });
 

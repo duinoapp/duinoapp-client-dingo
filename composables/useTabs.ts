@@ -4,6 +4,17 @@ import type { IRange } from 'monaco-editor/esm/vs/editor/editor.api';
 
 export type TabType = 'file' | 'welcome' | 'settings' | 'start-project' | 'invaders' | 'boards' | 'libraries' | 'project-settings';
 
+const typeNames = {
+  'file': 'File',
+  'welcome': 'Welcome',
+  'settings': 'Settings',
+  'start-project': 'Start Project',
+  'invaders': 'Invaders',
+  'boards': 'Boards',
+  'libraries': 'Libraries',
+  'project-settings': 'Project Settings',
+};
+
 export interface ProjectTab {
   id: string
   projectId: string | null
@@ -122,6 +133,16 @@ export const useTabs = defineStore('tabs', () => {
     });
   };
 
+  const openGeneralTab = (tabType: Exclude<TabType, 'file'>): void => {
+    const existingTab = findTab(tabType);
+    if (existingTab) {
+      return selectTab(existingTab);
+    }
+    const currentProjectId = projects.currentProjectId;
+    if (!currentProjectId) throw new Error('No project selected.');
+    addTab({ type: tabType, name: typeNames[tabType], projectId: currentProjectId });
+  };
+
   const closeTab = (tab: ProjectTab): void => {
     if (tab.isCurrent) {
       let tabIndex = tabs.value.findIndex((t) => t.id === tab.id);
@@ -199,6 +220,7 @@ export const useTabs = defineStore('tabs', () => {
     toggleTemporary,
     addTab,
     openFileTab,
+    openGeneralTab,
     closeTab,
     clearRange,
     updateTabsOrder,

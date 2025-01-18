@@ -34,12 +34,15 @@ export const useServers = defineStore('server', () => {
   const loadingServers = ref(false);
   const invalidDialog = ref(false);
 
+  const currentServerLive = computed(() => {
+    return servers.value.some((s) => s.url === serverUrl.value);
+  });
+
   const checkCurrentServer = () => {
-    const hasInfo = servers.value.some((s) => s.url === serverUrl.value);
-    if (!hasInfo) {
+    if (!currentServerLive.value) {
       invalidDialog.value = true;
     }
-    return hasInfo;
+    return currentServerLive.value;
   }
 
   const setServerUrl = async (rawUrl: string) => {
@@ -113,6 +116,7 @@ export const useServers = defineStore('server', () => {
 
   return {
     servers,
+    currentServerLive,
     isLoadingServers: () => loadingServers.value,
     showInvalidDialog: () => invalidDialog.value,
     hideInvalidDialog: () => invalidDialog.value = false,
